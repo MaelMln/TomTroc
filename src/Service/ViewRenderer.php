@@ -1,12 +1,12 @@
 <?php
 
-namespace Core;
+namespace App\Service;
 
-class View {
+class ViewRenderer {
 	public function render(string $viewPath, array $data = []) {
 		extract($data);
 
-		$fullPath = __DIR__ . '/../app/Views/' . $viewPath . '.php';
+		$fullPath = __DIR__ . '/../src/Views/' . $viewPath . '.php';
 
 		if (file_exists($fullPath)) {
 			include $fullPath;

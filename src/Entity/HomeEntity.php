@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Entity;
 
-use Core\Model;
+use App\Controllers\AbstractEntity;
 
-class HomeModel extends Model {
+class HomeEntity extends AbstractEntity {
 	public function getData() {
 		$stmt = $this->db->prepare("SELECT 'Hello World depuis la base de données!' AS message");
 		$stmt->execute();

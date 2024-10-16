@@ -1,11 +1,10 @@
 <?php
 
-namespace Core;
+namespace App\Controllers;
 
-use Core\Database;
-use PDO;
+use App\Repository\Database;
 
-class Model {
+abstract class AbstractEntity {
 	protected $db;
 
 	public function __construct() {

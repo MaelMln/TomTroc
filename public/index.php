@@ -10,21 +10,33 @@ ini_set('session.use_only_cookies', 1);
 
 require_once __DIR__ . '/../core/autoload.php';
 
-$url = isset($_GET['url']) ? explode('/', filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL)) : [];
+$routes = include __DIR__ . '/../config/routes/routes.php';
 
-$controllerName = !empty($url[0]) ? ucfirst($url[0]) . 'Controller' : 'HomeController';
-$method = isset($url[1]) ? $url[1] : 'index';
-$params = array_slice($url, 2);
+$requestUri = isset($_GET['url']) ? '/' . filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL) : '/';
 
-$controllerClass = "App\\Controllers\\{$controllerName}";
+$routeFound = false;
+foreach ($routes as $route) {
+	if ($route['path'] === $requestUri) {
+		$routeFound = true;
+		$controllerMethod = explode('::', $route['controller']);
+		$controllerClass = $controllerMethod[0];
+		$method = $controllerMethod[1];
 
-if (class_exists($controllerClass)) {
-	$controller = new $controllerClass();
-	if (method_exists($controller, $method)) {
-		call_user_func_array([$controller, $method], $params);
-	} else {
-		echo "Méthode {$method} non trouvée dans le contrôleur {$controllerName}.";
+		if (class_exists($controllerClass)) {
+			$controller = new $controllerClass();
+
+			if (method_exists($controller, $method)) {
+				$controller->$method();
+			} else {
+				echo "Erreur 404 : Méthode {$method} non trouvée dans le contrôleur {$controllerClass}.";
+			}
+		} else {
+			echo "Erreur 404 : Contrôleur {$controllerClass} non trouvé.";
+		}
+		break;
 	}
-} else {
-	echo "Contrôleur {$controllerName} non trouvé.";
+}
+
+if (!$routeFound) {
+	echo "Erreur 404 : Page non trouvée.";
 }

@@ -2,9 +2,9 @@
 
 spl_autoload_register(function ($class) {
 	$prefixes = [
-		'App\\Controllers\\' => __DIR__ . '/../app/Controllers/',
-		'App\\Models\\'      => __DIR__ . '/../app/Models/',
-		'Core\\'             => __DIR__ . '/',
+		'App\\Controller\\' => __DIR__ . '/../src/Controller/',
+		'App\\Entity\\'      => __DIR__ . '/../src/Entity/',
+		'Core\\'             => __DIR__ . 'autoload.php/',
 	];
 
 	foreach ($prefixes as $prefix => $base_dir) {
@@ -14,7 +14,6 @@ spl_autoload_register(function ($class) {
 		}
 
 		$relative_class = substr($class, $len);
-
 		$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 
 		if (file_exists($file)) {

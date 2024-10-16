@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controller;
 
-use Core\Controller;
-
-class HomeController extends Controller {
+class HomeController extends AbstractController {
 	public function index() {
 		$model = $this->model('HomeModel');
 		$data = $model->getData();
