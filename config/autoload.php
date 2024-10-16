@@ -3,8 +3,8 @@
 spl_autoload_register(function ($class) {
 	$prefixes = [
 		'App\\Controller\\' => __DIR__ . '/../src/Controller/',
-		'App\\Entity\\'      => __DIR__ . '/../src/Entity/',
-		'Core\\'             => __DIR__ . 'autoload.php/',
+		'App\\Entity\\' => __DIR__ . '/../src/Entity/',
+		'Core\\' => __DIR__ . 'autoload.php/',
 	];
 
 	foreach ($prefixes as $prefix => $base_dir) {
