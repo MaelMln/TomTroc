@@ -2,9 +2,8 @@
 
 namespace App\Entity;
 
-use App\Repository\AbstractRepository;
 
-class HomeRepository
+class HomeEntity
 {
 	private $message;
 
