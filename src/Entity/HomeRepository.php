@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
-class HomeEntity extends AbstractEntity
+use App\Repository\AbstractRepository;
+
+class HomeRepository
 {
 	private $message;
 
 	public function __construct(string $message)
 	{
-		parent::__construct();
 		$this->message = $message;
 	}
 

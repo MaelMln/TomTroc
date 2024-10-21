@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Entity;
+namespace App\Repository;
 
 use App\Service\Database;
 
-abstract class AbstractEntity
+abstract class AbstractRepository
 {
 	protected $db;
 
