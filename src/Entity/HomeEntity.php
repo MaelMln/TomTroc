@@ -2,14 +2,18 @@
 
 namespace App\Entity;
 
-use App\Controllers\AbstractEntity;
-
 class HomeEntity extends AbstractEntity
 {
-	public function getData()
+	private $message;
+
+	public function __construct(string $message)
 	{
-		$stmt = $this->db->prepare("SELECT 'Hello World depuis la base de données!' AS message");
-		$stmt->execute();
-		return $stmt->fetch(\PDO::FETCH_ASSOC);
+		parent::__construct();
+		$this->message = $message;
+	}
+
+	public function getMessage(): string
+	{
+		return $this->message;
 	}
 }

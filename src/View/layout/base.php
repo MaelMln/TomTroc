@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<?php
+	$config = require __DIR__ . '/../../../config/config.php';
+	$baseUrl = $config['base_url'];
+	?>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title><?= $title ?? 'TomTroc' ?></title>
+	<link rel="stylesheet" href="<?= $baseUrl ?>/assets/css/style.css">
+</head>
+<body>
+<?php include __DIR__ . '/header.php'; ?>
+
+<main>
+	<?php
+	if (isset($content)) {
+		include $content;
+	}
+	?>
+</main>
+
+<?php include __DIR__ . '/footer.php'; ?>
+</body>
+</html>

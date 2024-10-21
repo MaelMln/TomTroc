@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repository;
+namespace App\Service;
 
 use PDO;
 use PDOException;
@@ -12,7 +12,7 @@ class Database
 
 	private function __construct()
 	{
-		$config = require __DIR__ . '/../config/config.php';
+		$config = require ROOT_DIR . '/config/config.php';
 		$dbConfig = $config['db'];
 
 		try {
@@ -20,16 +20,8 @@ class Database
 			$this->connection = new PDO($dsn, $dbConfig['user'], $dbConfig['password']);
 			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		} catch (PDOException $e) {
-			die("Erreur de connexion : " . $e->getMessage());
+			throw new \Exception("Erreur de connexion : " . $e->getMessage());
 		}
-	}
-
-	private function __clone()
-	{
-	}
-
-	private function __wakeup()
-	{
 	}
 
 	public static function getInstance(): PDO

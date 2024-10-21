@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Entity;
 
-use App\Repository\Database;
+use App\Service\Database;
 
 abstract class AbstractEntity
 {
@@ -13,3 +13,4 @@ abstract class AbstractEntity
 		$this->db = Database::getInstance();
 	}
 }
+

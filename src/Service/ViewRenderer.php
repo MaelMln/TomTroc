@@ -8,12 +8,14 @@ class ViewRenderer
 	{
 		extract($data);
 
-		$fullPath = __DIR__ . '/../src/Views/' . $viewPath . '.php';
+		$fullViewPath = __DIR__ . '/../View/' . $viewPath . '.php';
+		$basePath = __DIR__ . '/../View/layout/base.php';
 
-		if (file_exists($fullPath)) {
-			include $fullPath;
+		if (file_exists($fullViewPath) && file_exists($basePath)) {
+			$content = $fullViewPath;
+			include $basePath;
 		} else {
-			throw new \Exception("Vue {$viewPath} non trouvée.");
+			throw new \Exception("Vue ou layout non trouvé.");
 		}
 	}
 }

@@ -1,13 +1,20 @@
 <?php
 
+
 namespace App\Controller;
+
+use App\Entity\HomeEntity;
+use App\Repository\HomeRepository;
 
 class HomeController extends AbstractController
 {
 	public function index()
 	{
-		$model = $this->model('HomeModel');
-		$data = $model->getData();
-		$this->view('home/index', $data);
+		$repository = new HomeRepository();
+		$data = $repository->getData();
+		$entity = new HomeEntity($data['message']);
+
+		$this->view('home/index', ['message' => $entity->getMessage()]);
 	}
 }
+
