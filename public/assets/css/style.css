@@ -60,13 +60,13 @@ nav ul {
 	display: flex;
 	gap: 20px;
 	width: 100%;
-	justify-content: flex-end; /* Aligne les éléments à droite par défaut */
+	justify-content: flex-end;
 }
 
 .nav-left {
 	display: flex;
 	gap: 20px;
-	margin-left: 20px; /* Espace entre le logo et les premiers liens */
+	margin-left: 20px;
 }
 
 .nav-right {
@@ -99,12 +99,6 @@ nav ul li a:hover {
 }
 
 /* Section Hero */
-.hero-background {
-	background-color: #F5F3EF;
-	width: 100%;
-}
-
-/* Section Hero */
 .hero {
 	display: flex;
 	justify-content: space-between;
@@ -112,6 +106,11 @@ nav ul li a:hover {
 	padding: 60px 0;
 	max-width: 1200px;
 	margin: 0 auto;
+}
+
+.hero-background {
+	background-color: #F5F3EF;
+	width: 100%;
 }
 
 .hero-content {

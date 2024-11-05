@@ -4,32 +4,19 @@ namespace App\Entity;
 
 class User
 {
-	private int $id;
-	private string $username;
-	private string $email;
-	private string $password;
-	private ?string $fullName;
-	private ?string $profilePicture;
-	private string $createdAt;
-	private string $updatedAt;
+	private string  $createdAt;
+
+	private string  $updatedAt;
 
 	public function __construct(
-		string  $username,
-		string  $email,
-		string  $password,
-		?string $fullName = null,
-		?string $profilePicture = null,
-		string  $createdAt = '',
-		string  $updatedAt = ''
+		private int     $id,
+		private string  $username,
+		private string  $email,
+		private string  $password,
+		private ?string $fullName,
+		private ?string $profilePicture,
 	)
 	{
-		$this->username = $username;
-		$this->email = $email;
-		$this->password = $password;
-		$this->fullName = $fullName;
-		$this->profilePicture = $profilePicture;
-		$this->createdAt = $createdAt ?: date('Y-m-d H:i:s');
-		$this->updatedAt = $updatedAt ?: date('Y-m-d H:i:s');
 	}
 
 	public function getId(): int
@@ -97,18 +84,9 @@ class User
 		return $this->createdAt;
 	}
 
-	public function setCreatedAt(string $createdAt): void
-	{
-		$this->createdAt = $createdAt;
-	}
-
 	public function getUpdatedAt(): string
 	{
 		return $this->updatedAt;
 	}
 
-	public function setUpdatedAt(string $updatedAt): void
-	{
-		$this->updatedAt = $updatedAt;
-	}
 }

@@ -63,8 +63,20 @@ abstract class AbstractRepository
 	private function hydrate(array $data): object
 	{
 		$className = $this->getEntityClass();
-		return new $className(...array_values($data));
+		$reflectionClass = new \ReflectionClass($className);
+		$constructor = $reflectionClass->getConstructor();
+		$args = [];
+
+		if ($constructor) {
+			foreach ($constructor->getParameters() as $param) {
+				$name = $param->getName();
+				$args[$name] = $data[$name] ?? null;
+			}
+		}
+
+		return $reflectionClass->newInstanceArgs($args);
 	}
+
 
 	private function extract(object $entity): array
 	{
