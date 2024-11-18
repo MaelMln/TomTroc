@@ -7,6 +7,14 @@ use App\Service\ViewRenderer;
 
 abstract class AbstractController
 {
+	protected string $baseUrl;
+
+	public function __construct()
+	{
+		$config = require ROOT_DIR . '/config/config.php';
+		$this->baseUrl = $config['base_url'];
+	}
+
 	public function getEntity(string $entity)
 	{
 		$entityClass = "App\\Entity\\" . $entity;
@@ -23,5 +31,3 @@ abstract class AbstractController
 		$view->render($viewPath, $data);
 	}
 }
-
-

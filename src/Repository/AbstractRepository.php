@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Service\Database;
 use PDO;
+use function App\Util\TextReformat\camelToSnake;
+use function App\Util\TextReformat\snakeToCamel;
 
 abstract class AbstractRepository
 {
@@ -64,19 +66,26 @@ abstract class AbstractRepository
 	{
 		$className = $this->getEntityClass();
 		$reflectionClass = new \ReflectionClass($className);
-		$constructor = $reflectionClass->getConstructor();
-		$args = [];
+		$entity = $reflectionClass->newInstanceWithoutConstructor();
 
-		if ($constructor) {
-			foreach ($constructor->getParameters() as $param) {
-				$name = $param->getName();
-				$args[$name] = $data[$name] ?? null;
+		foreach ($data as $column => $value) {
+			$propertyName = snakeToCamel($column);
+			if (!$reflectionClass->hasProperty($propertyName)) {
+				continue;
+			}
+
+			$setter = 'set' . ucfirst($propertyName);
+
+			if ($reflectionClass->hasMethod($setter)) {
+				$method = $reflectionClass->getMethod($setter);
+				if ($method->isPublic()) {
+					$method->invoke($entity, $value);
+				}
 			}
 		}
 
-		return $reflectionClass->newInstanceArgs($args);
+		return $entity;
 	}
-
 
 	private function extract(object $entity): array
 	{
@@ -86,7 +95,14 @@ abstract class AbstractRepository
 		foreach ($reflect->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
 			if (str_starts_with($method->getName(), 'get')) {
 				$property = lcfirst(substr($method->getName(), 3));
-				$data[$property] = $method->invoke($entity);
+				$column = camelToSnake($property);
+				$value = $method->invoke($entity);
+
+				if ($property === 'createdAt') {
+					continue;
+				}
+
+				$data[$column] = $value;
 			}
 		}
 		return $data;

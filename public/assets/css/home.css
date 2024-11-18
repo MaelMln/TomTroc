@@ -1,0 +1,85 @@
+/* Section Hero */
+.hero-background {
+	background-color: #F5F3EF;
+	width: 100%;
+}
+
+.hero {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 60px 0;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.hero-content {
+	flex: 1;
+	padding-right: 20px;
+}
+
+.hero h1 {
+	font-size: 2.5em;
+	font-weight: bold;
+	color: #333;
+}
+
+.hero p {
+	font-size: 1.2em;
+	color: #666;
+	margin-top: 15px;
+	line-height: 1.5;
+}
+
+.btn-discover {
+	display: inline-block;
+	margin-top: 20px;
+	padding: 10px 20px;
+	background-color: #00AC66;
+	color: white;
+	border-radius: 10px;
+	text-decoration: none;
+	font-weight: bold;
+	width: 152px;
+	height: 63px;
+	align-content: center;
+	text-align: center;
+}
+
+.btn-discover:hover {
+	background-color: #006D41;
+}
+
+.hero-image {
+	flex: 1;
+	text-align: center;
+}
+
+.image-container {
+	display: inline-block;
+	position: relative;
+	text-align: center;
+	margin-top: 10px;
+}
+
+.hero-image img {
+	max-width: 100%;
+	width: 404px;
+	height: auto;
+	border-radius: 10px;
+	display: block;
+	margin: 0 auto;
+}
+
+.photo-credit {
+	line-height: 14.52px;
+	color: #A6A6A6;
+	margin-top: 5px;
+	font-size: 12px;
+	font-family: 'Inter', sans-serif;
+	font-style: italic;
+	font-weight: 400;
+	text-align: right;
+	width: 100%;
+	display: inline-block;
+}

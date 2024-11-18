@@ -4,9 +4,8 @@ namespace App\Entity;
 
 class User
 {
-	private string  $createdAt;
 
-	private string  $updatedAt;
+	private string $updatedAt;
 
 	public function __construct(
 		private int     $id,
@@ -15,6 +14,7 @@ class User
 		private string  $password,
 		private ?string $fullName,
 		private ?string $profilePicture,
+		private readonly string $createdAt
 	)
 	{
 	}
@@ -89,4 +89,8 @@ class User
 		return $this->updatedAt;
 	}
 
+	public function setUpdatedAt(string $updatedAt): void
+	{
+		$this->updatedAt = $updatedAt;
+	}
 }
