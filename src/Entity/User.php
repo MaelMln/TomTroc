@@ -5,21 +5,22 @@ namespace App\Entity;
 class User
 {
 
-	private string $updatedAt;
+	private ?string $updatedAt = null;
+	private string $createdAt;
 
 	public function __construct(
-		private int     $id,
+		private ?int     $id,
 		private string  $username,
 		private string  $email,
 		private string  $password,
 		private ?string $fullName,
 		private ?string $profilePicture,
-		private readonly string $createdAt
 	)
 	{
+		$this->createdAt = date(DATE_ATOM);
 	}
 
-	public function getId(): int
+	public function getId(): ?int
 	{
 		return $this->id;
 	}
@@ -84,12 +85,12 @@ class User
 		return $this->createdAt;
 	}
 
-	public function getUpdatedAt(): string
+	public function getUpdatedAt(): ?string
 	{
 		return $this->updatedAt;
 	}
 
-	public function setUpdatedAt(string $updatedAt): void
+	public function setUpdatedAt(?string $updatedAt): void
 	{
 		$this->updatedAt = $updatedAt;
 	}

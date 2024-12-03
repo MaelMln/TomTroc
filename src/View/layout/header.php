@@ -6,15 +6,22 @@
 		<nav>
 			<div class="nav-left">
 				<ul>
-					<li><a href="/home">Accueil</a></li>
+					<li><a href="/">Accueil</a></li>
 					<li><a href="/books">Nos livres à l'échange</a></li>
 				</ul>
 			</div>
 			<div class="nav-right">
 				<ul>
-					<li><a href="/messages">Messagerie <span class="notification">0</span></a></li>
-					<li><a href="/account">Mon compte</a></li>
-					<li><a href="/login">Connexion</a></li>
+					<?php
+					$isLoggedIn = isset($_SESSION['user']);
+					?>
+					<?php if ($isLoggedIn): ?>
+						<li><a href="/account">Mon compte</a></li>
+						<li><a href="/logout">Déconnexion</a></li>
+					<?php else: ?>
+						<li><a href="/login">Connexion</a></li>
+						<li><a href="/register">Inscription</a></li>
+					<?php endif; ?>
 				</ul>
 			</div>
 		</nav>

@@ -4,8 +4,7 @@ namespace App\Repository;
 
 use App\Service\Database;
 use PDO;
-use function App\Util\TextReformat\camelToSnake;
-use function App\Util\TextReformat\snakeToCamel;
+use App\Util\TextReformat;
 
 abstract class AbstractRepository
 {
@@ -42,11 +41,10 @@ abstract class AbstractRepository
 	{
 		$data = $this->extract($entity);
 		$table = $this->getTableName();
-		if (isset($data['id'])) {
+		if ($data['id'] !== null) {
 			$setFields = array_map(fn($key) => "$key = :$key", array_keys($data));
 			$sql = "UPDATE $table SET " . implode(', ', $setFields) . " WHERE id = :id";
 		} else {
-			unset($data['id']);
 			$fields = implode(', ', array_keys($data));
 			$placeholders = implode(', ', array_map(fn($key) => ":$key", array_keys($data)));
 			$sql = "INSERT INTO $table ($fields) VALUES ($placeholders)";
@@ -62,14 +60,14 @@ abstract class AbstractRepository
 		return $stmt->execute(['id' => $id]);
 	}
 
-	private function hydrate(array $data): object
+	protected function hydrate(array $data): object
 	{
 		$className = $this->getEntityClass();
 		$reflectionClass = new \ReflectionClass($className);
 		$entity = $reflectionClass->newInstanceWithoutConstructor();
 
 		foreach ($data as $column => $value) {
-			$propertyName = snakeToCamel($column);
+			$propertyName = TextReformat::snakeToCamel($column);
 			if (!$reflectionClass->hasProperty($propertyName)) {
 				continue;
 			}
@@ -79,6 +77,9 @@ abstract class AbstractRepository
 			if ($reflectionClass->hasMethod($setter)) {
 				$method = $reflectionClass->getMethod($setter);
 				if ($method->isPublic()) {
+					if ($propertyName === 'updatedAt' && $value === null) {
+						$value = date('Y-m-d H:i:s');
+					}
 					$method->invoke($entity, $value);
 				}
 			}
@@ -86,6 +87,7 @@ abstract class AbstractRepository
 
 		return $entity;
 	}
+
 
 	private function extract(object $entity): array
 	{
@@ -95,7 +97,7 @@ abstract class AbstractRepository
 		foreach ($reflect->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
 			if (str_starts_with($method->getName(), 'get')) {
 				$property = lcfirst(substr($method->getName(), 3));
-				$column = camelToSnake($property);
+				$column = TextReformat::camelToSnake($property);
 				$value = $method->invoke($entity);
 
 				if ($property === 'createdAt') {

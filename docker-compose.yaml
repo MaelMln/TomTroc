@@ -1,0 +1,34 @@
+services:
+    db:
+        image: mariadb:10.11
+        environment:
+            MARIADB_ROOT_PASSWORD: root
+            MARIADB_DATABASE: tomtroc
+            MARIADB_USER: tomtroc
+            MARIADB_PASSWORD: tomtroc
+
+    php:
+        build:
+            context: ./docker/php
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/var/www/app
+        depends_on:
+            - db
+
+    nginx:
+        build:
+            context: ./docker/nginx
+            dockerfile: Dockerfile
+        volumes:
+            - ./public:/var/www/app/public
+        depends_on:
+            - php
+        ports:
+            - "80:80"
+
+    phpmyadmin:
+        image: phpmyadmin:latest
+        ports:
+            - "8080:80"
+

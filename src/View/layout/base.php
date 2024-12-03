@@ -9,6 +9,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><?php echo $title ?? 'TomTroc' ?></title>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+		  rel="stylesheet">
 	<link rel="stylesheet" href="<?php echo $baseUrl ?>/assets/css/base.css">
 	<link rel="stylesheet" href="<?php echo $baseUrl ?>/assets/css/header.css">
 	<link rel="stylesheet" href="<?php echo $baseUrl ?>/assets/css/footer.css">

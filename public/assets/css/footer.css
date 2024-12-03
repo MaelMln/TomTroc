@@ -14,13 +14,12 @@ footer .container {
 
 .footer-links {
 	display: flex;
-	justify-content: flex-end; /* Ajouté pour aligner les éléments à droite */
+	justify-content: flex-end;
 	align-items: center;
 	gap: 10px;
 	font-size: 14px;
 	color: #333;
 	width: 100%;
-	/* Supprimé : text-align: right; */
 }
 
 .footer-links a {
