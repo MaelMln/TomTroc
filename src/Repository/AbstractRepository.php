@@ -5,6 +5,8 @@ namespace App\Repository;
 use App\Service\Database;
 use PDO;
 use App\Util\TextReformat;
+use ReflectionClass;
+
 
 abstract class AbstractRepository
 {
@@ -63,7 +65,7 @@ abstract class AbstractRepository
 	protected function hydrate(array $data): object
 	{
 		$className = $this->getEntityClass();
-		$reflectionClass = new \ReflectionClass($className);
+		$reflectionClass = new ReflectionClass($className);
 		$entity = $reflectionClass->newInstanceWithoutConstructor();
 
 		foreach ($data as $column => $value) {
@@ -72,22 +74,13 @@ abstract class AbstractRepository
 				continue;
 			}
 
-			$setter = 'set' . ucfirst($propertyName);
-
-			if ($reflectionClass->hasMethod($setter)) {
-				$method = $reflectionClass->getMethod($setter);
-				if ($method->isPublic()) {
-					if ($propertyName === 'updatedAt' && $value === null) {
-						$value = date('Y-m-d H:i:s');
-					}
-					$method->invoke($entity, $value);
-				}
-			}
+			$property = $reflectionClass->getProperty($propertyName);
+			$property->setAccessible(true);
+			$property->setValue($entity, $value);
 		}
 
 		return $entity;
 	}
-
 
 	private function extract(object $entity): array
 	{
