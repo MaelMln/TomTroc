@@ -12,7 +12,7 @@
 			</div>
 		<?php endif; ?>
 
-		<form method="POST" action="/register">
+		<form method="POST" action="/register" novalidate>
 			<div class="form-group">
 				<label for="username">Pseudo</label>
 				<input type="text" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required>

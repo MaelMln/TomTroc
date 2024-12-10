@@ -26,4 +26,13 @@ class UserRepository extends AbstractRepository
 		return $data ? $this->hydrate($data) : null;
 	}
 
+	public function findByUsername(string $username): ?User
+	{
+		$stmt = $this->db->prepare("SELECT * FROM {$this->getTableName()} WHERE username = :username");
+		$stmt->execute(['username' => $username]);
+		$data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		return $data ? $this->hydrate($data) : null;
+	}
+
 }

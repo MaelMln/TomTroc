@@ -1,10 +1,21 @@
 <div class="login-container">
 	<div class="login-form">
 		<h1>Connexion</h1>
-		<form method="POST" action="/login">
+
+		<?php if (isset($errors) && !empty($errors)): ?>
+			<div class="errors">
+				<ul>
+					<?php foreach ($errors as $error): ?>
+						<li><?php echo htmlspecialchars($error); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php endif; ?>
+
+		<form method="POST" action="/login" novalidate>
 			<div class="form-group">
 				<label for="email">Adresse email</label>
-				<input type="email" id="email" name="email" required>
+				<input type="email" id="email" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
 			</div>
 			<div class="form-group">
 				<label for="password">Mot de passe</label>

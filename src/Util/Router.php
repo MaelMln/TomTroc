@@ -17,8 +17,11 @@ class Router
 	{
 		$routeFound = false;
 
+		$parsedUrl = parse_url($requestUri);
+		$path = $parsedUrl['path'] ?? '/';
+
 		foreach ($this->routes as $route) {
-			if ($route['path'] === $requestUri) {
+			if ($route['path'] === $path) {
 				$routeFound = true;
 				$controllerMethod = explode('::', $route['controller']);
 				$controllerClass = $controllerMethod[0];

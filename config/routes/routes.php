@@ -16,8 +16,24 @@ return [
 		'path' => '/logout',
 		'controller' => 'App\Controller\UserController::logout',
 	],
-	'list_users' => [
-		'path' => '/users',
-		'controller' => 'App\Controller\UserController::list',
-	],
+	'list_books' => [
+        'path' => '/books',
+        'controller' => 'App\Controller\BookController::index',
+    ],
+    'create_book' => [
+        'path' => '/books/create',
+        'controller' => 'App\Controller\BookController::create',
+    ],
+    'edit_book' => [
+        'path' => '/books/edit',
+        'controller' => 'App\Controller\BookController::edit',
+    ],
+    'delete_book' => [
+        'path' => '/books/delete',
+        'controller' => 'App\Controller\BookController::delete',
+    ],
+    'show_book' => [
+        'path' => '/books/show',
+        'controller' => 'App\Controller\BookController::show',
+    ],
 ];

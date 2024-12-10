@@ -16,17 +16,21 @@ class UserController extends AbstractController
 		];
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$data['errors'] = $this->validateRegistration($_POST);
+			if (!$this->validateRateLimit('register_attempts')) {
+				$data['errors'][] = 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
+			} else {
+				$data['errors'] = $this->validateRegistration($_POST);
 
-			if (empty($data['errors'])) {
-				$user = $this->createUser($_POST);
-				$userRepository = new UserRepository();
+				if (empty($data['errors'])) {
+					$user = $this->createUser($_POST);
+					$userRepository = new UserRepository();
 
-				if ($userRepository->save($user)) {
-					header('Location: ' . $this->baseUrl . '/login');
-					exit;
-				} else {
-					$data['errors'][] = 'Une erreur est survenue lors de l\'inscription.';
+					if ($userRepository->save($user)) {
+						header('Location: ' . $this->baseUrl . '/login');
+						exit;
+					} else {
+						$data['errors'][] = 'Une erreur est survenue lors de l\'inscription.';
+					}
 				}
 			}
 		}
@@ -43,24 +47,38 @@ class UserController extends AbstractController
 		];
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$email = $_POST['email'] ?? null;
-			$password = $_POST['password'] ?? null;
-
-			if (!$email || !$password) {
-				$data['errors'][] = 'Veuillez remplir tous les champs.';
+			if (!$this->validateRateLimit('login_attempts')) {
+				$data['errors'][] = 'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
 			} else {
-				$userRepository = new UserRepository();
-				$user = $userRepository->findByEmail($email);
+				$email = trim($_POST['email'] ?? '');
+				$password = $_POST['password'] ?? '';
 
-				if ($user && password_verify($password, $user->getPassword())) {
-					$_SESSION['user'] = [
-						'id' => $user->getId(),
-						'username' => $user->getUsername(),
-						'email' => $user->getEmail(),
-					];
-					header('Location: ' . $this->baseUrl);
-					exit;
+				if (empty($email) || empty($password)) {
+					$data['errors'][] = 'Veuillez remplir tous les champs.';
 				} else {
+					$userRepository = new UserRepository();
+					$user = $userRepository->findByEmail($email);
+
+					$dummyHash = '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
+
+					if ($user) {
+						$passwordHash = $user->getPassword();
+					} else {
+						$passwordHash = $dummyHash;
+					}
+
+					if (password_verify($password, $passwordHash)) {
+						if ($user) {
+							$_SESSION['user'] = [
+								'id' => $user->getId(),
+								'username' => $user->getUsername(),
+								'email' => $user->getEmail(),
+							];
+							header('Location: ' . $this->baseUrl);
+							exit;
+						}
+					}
+
 					$data['errors'][] = 'Email ou mot de passe incorrect.';
 				}
 			}
@@ -76,27 +94,67 @@ class UserController extends AbstractController
 		exit;
 	}
 
-
 	private function validateRegistration(array $input): array
 	{
 		$errors = [];
-		$username = $input['username'] ?? null;
-		$email = $input['email'] ?? null;
-		$password = $input['password'] ?? null;
+		$username = trim($input['username'] ?? '');
+		$email = trim($input['email'] ?? '');
+		$password = $input['password'] ?? '';
 
-		if (!$username || !$email || !$password) {
+		if (empty($username) || empty($email) || empty($password)) {
 			$errors[] = 'Tous les champs sont requis.';
+			return $errors;
 		}
 
-		if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$errors[] = 'Email invalide.';
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$errors[] = 'Adresse email invalide.';
 		}
 
-		if ($password && strlen($password) < 6) {
+		if (strlen($password) < 6) {
 			$errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
 		}
 
+		$userRepository = new UserRepository();
+		$duplicate = false;
+
+		if ($userRepository->findByEmail($email) || $userRepository->findByUsername($username)) {
+			$duplicate = true;
+		}
+
+		if ($duplicate) {
+			$errors[] = 'Un email de confirmation a été envoyé à votre adresse mail.';
+//			Demande de validation par email. Si l'email est déjà présent dans la bdd, alors on informe de la tentative
+//			de création de compte avec l'email déjà existant, sinon, réel message de confirmation d'inscription.
+		}
+
 		return $errors;
+	}
+
+	private function validateRateLimit(string $action, int $limit = 5, int $timeWindow = 3600): bool
+	{
+		if (!isset($_SESSION['rate_limit'])) {
+			$_SESSION['rate_limit'] = [];
+		}
+
+		$currentTime = time();
+
+		if (!isset($_SESSION['rate_limit'][$action])) {
+			$_SESSION['rate_limit'][$action] = [];
+		}
+
+		$_SESSION['rate_limit'][$action] = array_filter(
+			$_SESSION['rate_limit'][$action],
+			function ($timestamp) use ($currentTime, $timeWindow) {
+				return ($timestamp + $timeWindow) > $currentTime;
+			}
+		);
+
+		if (count($_SESSION['rate_limit'][$action]) >= $limit) {
+			return false;
+		}
+
+		$_SESSION['rate_limit'][$action][] = $currentTime;
+		return true;
 	}
 
 	private function createUser(array $input): User
