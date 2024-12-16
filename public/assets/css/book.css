@@ -46,15 +46,35 @@
 	background-color: #006D41;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-	.book-item {
-		width: calc(50% - 40px);
-	}
+/* Bouton Modifier */
+.btn-edit {
+	display: inline-block;
+	margin-top: 10px;
+	padding: 8px 12px;
+	background-color: #FFC107;
+	color: #fff;
+	text-decoration: none;
+	border-radius: 4px;
+	margin-right: 5px;
 }
 
-@media (max-width: 480px) {
-	.book-item {
-		width: 100%;
-	}
+.btn-edit:hover {
+	background-color: #FF9800;
 }
+
+/* Bouton Supprimer */
+.btn-delete {
+	display: inline-block;
+	margin-top: 10px;
+	padding: 8px 12px;
+	background-color: #DC3545;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.btn-delete:hover {
+	background-color: #C82333;
+}
+
