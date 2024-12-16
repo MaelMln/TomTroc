@@ -75,7 +75,6 @@ abstract class AbstractRepository
 			}
 
 			$property = $reflectionClass->getProperty($propertyName);
-			$property->setAccessible(true);
 			$property->setValue($entity, $value);
 		}
 

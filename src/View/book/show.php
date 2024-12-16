@@ -1,3 +1,11 @@
+<?php if (isset($_SESSION['error'])): ?>
+	<div class="errors">
+		<ul>
+			<li><?php echo htmlspecialchars($_SESSION['error']); ?></li>
+		</ul>
+	</div>
+	<?php unset($_SESSION['error']); ?>
+<?php endif; ?>
 <div class="book-detail">
 	<h1><?php echo htmlspecialchars($book->getTitle()); ?></h1>
 	<p>Auteur : <?php echo htmlspecialchars($book->getAuthor()); ?></p>
@@ -19,6 +27,9 @@
 
 	<?php if (isset($_SESSION['user']) && $_SESSION['user']['id'] === $book->getUserId()): ?>
 		<a href="<?php echo $baseUrl; ?>/books/edit?id=<?php echo $book->getId(); ?>" class="btn-edit">Modifier</a>
-		<a href="<?php echo $baseUrl; ?>/books/delete?id=<?php echo $book->getId(); ?>" class="btn-delete">Supprimer</a>
+
+		<form method="POST" action="<?php echo $baseUrl; ?>/books/delete?id=<?php echo $book->getId(); ?>" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ? Cette action est irréversible.');">
+			<button type="submit" class="btn-delete">Supprimer</button>
+		</form>
 	<?php endif; ?>
 </div>

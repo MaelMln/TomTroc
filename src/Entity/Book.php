@@ -94,9 +94,5 @@ class Book
 	{
 		return $this->updatedAt;
 	}
-
-	public function setUpdatedAt(?string $updatedAt): void
-	{
-		$this->updatedAt = $updatedAt;
-	}
+	
 }

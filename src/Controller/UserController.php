@@ -4,9 +4,20 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\ViewRenderer;
+use App\Service\RateLimit;
+use Exception;
 
 class UserController extends AbstractController
 {
+	private RateLimit $rateLimit;
+
+	public function __construct()
+	{
+		parent::__construct();
+		$this->rateLimit = new RateLimit();
+	}
+
 	public function register()
 	{
 		$data = [
@@ -16,7 +27,7 @@ class UserController extends AbstractController
 		];
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			if (!$this->validateRateLimit('register_attempts')) {
+			if (!$this->rateLimit->isAllowed('register_attempts')) {
 				$data['errors'][] = 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
 			} else {
 				$data['errors'] = $this->validateRegistration($_POST);
@@ -47,7 +58,7 @@ class UserController extends AbstractController
 		];
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			if (!$this->validateRateLimit('login_attempts')) {
+			if (!$this->rateLimit->isAllowed('login_attempts')) {
 				$data['errors'][] = 'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
 			} else {
 				$email = trim($_POST['email'] ?? '');
@@ -123,38 +134,11 @@ class UserController extends AbstractController
 
 		if ($duplicate) {
 			$errors[] = 'Un email de confirmation a été envoyé à votre adresse mail.';
-//			Demande de validation par email. Si l'email est déjà présent dans la bdd, alors on informe de la tentative
-//			de création de compte avec l'email déjà existant, sinon, réel message de confirmation d'inscription.
+			// Demande de validation par email. Si l'email est déjà présent dans la bdd, alors on informe de la tentative
+			// de création de compte avec l'email déjà existant, sinon, réel message de confirmation d'inscription.
 		}
 
 		return $errors;
-	}
-
-	private function validateRateLimit(string $action, int $limit = 5, int $timeWindow = 3600): bool
-	{
-		if (!isset($_SESSION['rate_limit'])) {
-			$_SESSION['rate_limit'] = [];
-		}
-
-		$currentTime = time();
-
-		if (!isset($_SESSION['rate_limit'][$action])) {
-			$_SESSION['rate_limit'][$action] = [];
-		}
-
-		$_SESSION['rate_limit'][$action] = array_filter(
-			$_SESSION['rate_limit'][$action],
-			function ($timestamp) use ($currentTime, $timeWindow) {
-				return ($timestamp + $timeWindow) > $currentTime;
-			}
-		);
-
-		if (count($_SESSION['rate_limit'][$action]) >= $limit) {
-			return false;
-		}
-
-		$_SESSION['rate_limit'][$action][] = $currentTime;
-		return true;
 	}
 
 	private function createUser(array $input): User
