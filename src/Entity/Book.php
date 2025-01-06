@@ -94,5 +94,10 @@ class Book
 	{
 		return $this->updatedAt;
 	}
+
+	public function setUpdatedAt(string $date): ?string
+	{
+		return $this->updatedAt = $date;
+	}
 	
 }

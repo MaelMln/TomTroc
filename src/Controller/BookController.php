@@ -53,7 +53,7 @@ class BookController extends AbstractController
 
 		$data = [
 			'title' => htmlspecialchars($book->getTitle()) . ' - TomTroc',
-			'additionalCss' => ['book_detail.css'],
+			'additionalCss' => ['book.css'],
 			'book' => $book,
 		];
 		$this->view('book/show', $data);
@@ -172,6 +172,7 @@ class BookController extends AbstractController
 						$book->setImage($imagePath);
 						$book->setDescription($input['description'] ?? null);
 						$book->setStatus($input['status'] ?? 'disponible');
+						$book->setUpdatedAt(date(DATE_ATOM));
 
 						if ($this->bookRepository->save($book)) {
 							header('Location: ' . $this->baseUrl . '/books/show?id=' . $book->getId());
