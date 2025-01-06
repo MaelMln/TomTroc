@@ -2,6 +2,11 @@
 	padding: 20px;
 }
 
+.book-image {
+	max-width: 200px;
+	max-height: 200px;
+}
+
 .search-form {
 	margin-bottom: 20px;
 }
@@ -78,3 +83,7 @@
 	background-color: #C82333;
 }
 
+.form-group img {
+	max-width: 100px;
+	max-height: 100px;
+}

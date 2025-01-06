@@ -16,7 +16,7 @@ class Book
 		private ?string $description,
 		private string $status,
 	) {
-		$this->createdAt = date(DATE_ATOM);
+		$this->createdAt = date('Y-m-d H:i:s');
 	}
 
 

@@ -16,7 +16,7 @@
 					$isLoggedIn = isset($_SESSION['user']);
 					?>
 					<?php if ($isLoggedIn): ?>
-						<li><a href="/account">Mon compte</a></li>
+						<li><a href="/profile">Mon compte</a></li>
 						<li><a href="/logout">Déconnexion</a></li>
 					<?php else: ?>
 						<li><a href="/login">Connexion</a></li>

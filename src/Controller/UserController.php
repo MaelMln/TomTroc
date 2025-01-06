@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Service\ViewRenderer;
+use App\Repository\BookRepository;
 use App\Service\RateLimit;
 use Exception;
 
@@ -151,5 +151,156 @@ class UserController extends AbstractController
 			fullName: null,
 			profilePicture: null,
 		);
+	}
+
+	public function profile()
+	{
+		$userRepository = new UserRepository();
+		$bookRepository = new BookRepository();
+
+		$id = $_GET['id'] ?? null;
+
+		if (!$id) {
+			if (!isset($_SESSION['user'])) {
+				header('Location: ' . $this->baseUrl . '/login');
+				exit;
+			}
+			$id = $_SESSION['user']['id'];
+		}
+
+		$user = $userRepository->findById((int)$id);
+
+		if (!$user) {
+			header('Location: ' . $this->baseUrl);
+			exit;
+		}
+
+		$bookCount = $bookRepository->countByUserId((int)$id);
+
+		$books = $bookRepository->findByUserId((int)$id);
+
+		$isOwnProfile = isset($_SESSION['user']) && $_SESSION['user']['id'] === $user->getId();
+
+		$data = [
+			'title' => htmlspecialchars($user->getUsername()) . ' - TomTroc',
+			'additionalCss' => ['profile.css'],
+			'user' => $user,
+			'bookCount' => $bookCount,
+			'books' => $books,
+			'isOwnProfile' => $isOwnProfile,
+			'errors' => [],
+		];
+
+		if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST') {
+			$input = $_POST;
+			$errors = $this->validateProfileInput($input, $user, $_FILES['profile_picture'] ?? null);
+
+			if (empty($errors)) {
+				$user->setUsername($input['username']);
+				$user->setEmail($input['email']);
+
+				if (!empty($input['password'])) {
+					$user->setPassword(password_hash($input['password'], PASSWORD_BCRYPT));
+				}
+
+				if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+					try {
+						$profilePicturePath = $this->handleImageUpload($_FILES['profile_picture'], 'profile_pictures');
+						$user->setProfilePicture($profilePicturePath);
+					} catch (Exception $e) {
+						$errors[] = $e->getMessage();
+					}
+				}
+
+				if (empty($errors)) {
+					if ($userRepository->save($user)) {
+						$_SESSION['user']['username'] = $user->getUsername();
+						$_SESSION['user']['email'] = $user->getEmail();
+						header('Location: ' . $this->baseUrl . '/profile?id=' . $user->getId());
+						exit;
+					} else {
+						$errors[] = 'Une erreur est survenue lors de la mise à jour de votre profil.';
+					}
+				}
+			}
+
+			$data['errors'] = $errors;
+		}
+
+		$this->view('user/profile', $data);
+	}
+
+	private function validateProfileInput(array $input, User $existingUser, $file = null): array
+	{
+		$errors = [];
+
+		$username = trim($input['username'] ?? '');
+		$email = trim($input['email'] ?? '');
+		$password = $input['password'] ?? '';
+
+		if (empty($username)) {
+			$errors[] = 'Le pseudo est requis.';
+		} else {
+			$userRepository = new UserRepository();
+			$existing = $userRepository->findByUsername($username);
+			if ($existing && $existing->getId() !== $existingUser->getId()) {
+				$errors[] = 'Ce pseudo est déjà pris.';
+			}
+		}
+
+		if (empty($email)) {
+			$errors[] = 'L\'adresse email est requise.';
+		} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$errors[] = 'Adresse email invalide.';
+		} else {
+			$userRepository = new UserRepository();
+			$existing = $userRepository->findByEmail($email);
+			if ($existing && $existing->getId() !== $existingUser->getId()) {
+				$errors[] = 'Cet email est déjà utilisé.';
+			}
+		}
+
+		if (!empty($password) && strlen($password) < 6) {
+			$errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
+		}
+
+		if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+			if ($file['error'] !== UPLOAD_ERR_OK) {
+				$errors[] = 'Erreur lors de l\'upload de la photo de profil.';
+			} else {
+				$allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+				if (!in_array(mime_content_type($file['tmp_name']), $allowedMimeTypes)) {
+					$errors[] = 'Type d\'image non supporté. Les types acceptés sont JPEG, PNG, GIF.';
+				}
+				if ($file['size'] > 2 * 1024 * 1024) {
+					$errors[] = 'La photo de profil ne doit pas dépasser 2MB.';
+				}
+			}
+		}
+
+		return $errors;
+	}
+
+	private function handleImageUpload(array $file, string $subDir = ''): string
+	{
+		$uploadDir = ROOT_DIR . '/public/assets/uploads/' . $subDir . '/';
+		if (!is_dir($uploadDir)) {
+			mkdir($uploadDir, 0755, true);
+		}
+
+		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+		$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+		if (!in_array($extension, $allowedExtensions)) {
+			throw new Exception('Type d\'image non supporté. Les types acceptés sont JPG, JPEG, PNG, GIF.');
+		}
+
+		$filename = uniqid() . '.' . $extension;
+		$destination = $uploadDir . $filename;
+
+		if (move_uploaded_file($file['tmp_name'], $destination)) {
+			return '/assets/uploads/' . $subDir . '/' . $filename;
+		}
+
+		throw new Exception('Erreur lors de l\'upload de l\'image.');
 	}
 }

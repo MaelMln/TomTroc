@@ -22,7 +22,7 @@
 		<p>Mise à jour le : <?php echo htmlspecialchars($book->getUpdatedAt()); ?></p>
 	<?php endif; ?>
 
-	<a href="<?php echo $baseUrl; ?>/users/show?id=<?php echo $book->getUserId(); ?>" class="btn-profile">Voir le profil du propriétaire</a>
+	<a href="<?php echo $baseUrl; ?>/profile?id=<?php echo $book->getUserId(); ?>" class="btn-profile">Voir le profil du propriétaire</a>
 	<a href="<?php echo $baseUrl; ?>/messages/send?to=<?php echo $book->getUserId(); ?>&book=<?php echo $book->getId(); ?>" class="btn-message">Envoyer un message</a>
 
 	<?php if (isset($_SESSION['user']) && $_SESSION['user']['id'] === $book->getUserId()): ?>

@@ -36,4 +36,8 @@ return [
         'path' => '/books/show',
         'controller' => 'App\Controller\BookController::show',
     ],
+	'profile' => [
+		'path' => '/profile',
+		'controller' => 'App\Controller\UserController::profile',
+	],
 ];

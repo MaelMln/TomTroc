@@ -40,4 +40,12 @@ class BookRepository extends AbstractRepository
 		}
 		return $books;
 	}
+
+	public function countByUserId(int $userId): int
+	{
+		$stmt = $this->db->prepare("SELECT COUNT(*) as count FROM {$this->getTableName()} WHERE user_id = :user_id");
+		$stmt->execute(['user_id' => $userId]);
+		$data = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $data ? (int)$data['count'] : 0;
+	}
 }

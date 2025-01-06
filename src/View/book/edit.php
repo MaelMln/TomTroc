@@ -1,4 +1,4 @@
-<div class="edit-book-container">
+<div>
 	<h1>Modifier le livre</h1>
 
 	<?php if (!empty($errors)): ?>

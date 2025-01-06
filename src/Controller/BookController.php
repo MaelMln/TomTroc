@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Book;
 use App\Repository\BookRepository;
-use App\Service\ViewRenderer;
 use App\Service\RateLimit;
 use Exception;
 
@@ -140,7 +139,7 @@ class BookController extends AbstractController
 
 		$data = [
 			'title' => $isEdit ? 'Modifier le livre' : 'Ajouter un livre',
-			'additionalCss' => [$isEdit ? 'edit_book.css' : 'create_book.css'],
+			'additionalCss' => ['book.css'],
 			'errors' => [],
 			'book' => $book,
 		];
@@ -172,7 +171,7 @@ class BookController extends AbstractController
 						$book->setImage($imagePath);
 						$book->setDescription($input['description'] ?? null);
 						$book->setStatus($input['status'] ?? 'disponible');
-						$book->setUpdatedAt(date(DATE_ATOM));
+						$book->setUpdatedAt(date('Y-m-d H:i:s'));
 
 						if ($this->bookRepository->save($book)) {
 							header('Location: ' . $this->baseUrl . '/books/show?id=' . $book->getId());
