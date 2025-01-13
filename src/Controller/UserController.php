@@ -268,12 +268,12 @@ class UserController extends AbstractController
 			if ($file['error'] !== UPLOAD_ERR_OK) {
 				$errors[] = 'Erreur lors de l\'upload de la photo de profil.';
 			} else {
-				$allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+				$allowedMimeTypes = ['image/jpeg', 'image/png'];
 				if (!in_array(mime_content_type($file['tmp_name']), $allowedMimeTypes)) {
-					$errors[] = 'Type d\'image non supporté. Les types acceptés sont JPEG, PNG, GIF.';
+					$errors[] = 'Type d\'image non supporté. Les types acceptés sont JPEG, PNG.';
 				}
 				if ($file['size'] > 2 * 1024 * 1024) {
-					$errors[] = 'La photo de profil ne doit pas dépasser 2MB.';
+					$errors[] = 'La photo de profil ne doit pas dépasser 2Mo.';
 				}
 			}
 		}
@@ -289,9 +289,9 @@ class UserController extends AbstractController
 		}
 
 		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-		$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+		$allowedExtensions = ['jpg', 'jpeg', 'png'];
 		if (!in_array($extension, $allowedExtensions)) {
-			throw new Exception('Type d\'image non supporté. Les types acceptés sont JPG, JPEG, PNG, GIF.');
+			throw new Exception('Type d\'image non supporté. Les types acceptés sont JPG, JPEG, PNG.');
 		}
 
 		$filename = uniqid() . '.' . $extension;
