@@ -1,6 +1,7 @@
 <?php
 
 return [
+	'env' => 'development',
 	'db' => [
 		'host' => 'your_database_host',
 		'dbname' => 'your_database_name',
