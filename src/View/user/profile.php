@@ -23,7 +23,8 @@
 				</div>
 			<?php endif; ?>
 
-			<form method="POST" action="<?php echo $baseUrl; ?>/profile?id=<?php echo $user->getId(); ?>" enctype="multipart/form-data" novalidate>
+			<form method="POST" action="<?php echo $baseUrl; ?>/profile/<?php echo $user->getId(); ?>"
+				  enctype="multipart/form-data" novalidate>
 				<div class="form-group">
 					<label for="username">Pseudo</label>
 					<input type="text" id="username" name="username"
@@ -49,9 +50,11 @@
 				</div>
 				<button type="submit" class="btn-submit">Mettre à Jour le Profil</button>
 			</form>
+			<a href="<?php echo $baseUrl; ?>/books/create" class="btn-create-book">Ajouter un Livre</a>
 		</div>
 	<?php else: ?>
-		<a href="<?php echo $baseUrl; ?>/messages/send?to=<?php echo $user->getId(); ?>" class="btn-message">Écrire un message</a>
+		<a href="<?php echo $baseUrl; ?>/messages/send?to=<?php echo $user->getId(); ?>" class="btn-message">Écrire un
+			message</a>
 	<?php endif; ?>
 
 	<div class="user-books">
@@ -93,10 +96,10 @@
 									: '<span class="badge badge-red">Non disponible</span>'; ?>
 							</td>
 							<td>
-								<a href="<?php echo $baseUrl; ?>/books/edit?id=<?php echo $book->getId(); ?>"
+								<a href="<?php echo $baseUrl; ?>/books/edit/<?php echo $book->getId(); ?>"
 								   class="btn-edit">Modifier</a>
 								<form method="POST"
-									  action="<?php echo $baseUrl; ?>/books/delete?id=<?php echo $book->getId(); ?>"
+									  action="<?php echo $baseUrl; ?>/books/delete/<?php echo $book->getId(); ?>"
 									  style="display:inline-block"
 									  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ?');">
 									<button type="submit" class="btn-delete">Supprimer</button>

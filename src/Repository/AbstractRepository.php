@@ -39,21 +39,28 @@ abstract class AbstractRepository
 		return $data ? $this->hydrate($data) : null;
 	}
 
-	public function save(object $entity): bool
+	public function save(object $entity): ?int
 	{
 		$data = $this->extract($entity);
 		$table = $this->getTableName();
-		if ($data['id'] !== null) {
-			$setFields = array_map(fn($key) => "$key = :$key", array_keys($data));
-			$sql = "UPDATE $table SET " . implode(', ', $setFields) . " WHERE id = :id";
+
+		if (isset($data['id']) && $data['id'] !== null) {
+			$setFields = array_map(fn($key) => "`$key` = :$key", array_keys($data));
+			$sql = "UPDATE `$table` SET " . implode(', ', $setFields) . " WHERE `id` = :id";
 		} else {
-			$fields = implode(', ', array_keys($data));
-			$placeholders = implode(', ', array_map(fn($key) => ":$key", array_keys($data)));
-			$sql = "INSERT INTO $table ($fields) VALUES ($placeholders)";
+			$fields = implode('`, `', array_keys($data));
+			$placeholders = implode(', :', array_keys($data));
+			$sql = "INSERT INTO `$table` (`$fields`) VALUES (:{$placeholders})";
 		}
 
 		$stmt = $this->db->prepare($sql);
-		return $stmt->execute($data);
+		$result = $stmt->execute($data);
+
+		if ($result && (!isset($data['id']) || $data['id'] === null)) {
+			return (int)$this->db->lastInsertId();
+		}
+
+		return null;
 	}
 
 	public function delete(int $id): bool

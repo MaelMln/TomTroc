@@ -35,4 +35,13 @@ class UserRepository extends AbstractRepository
 		return $data ? $this->hydrate($data) : null;
 	}
 
+	public function findById(int $id): ?User
+	{
+		$stmt = $this->db->prepare("SELECT * FROM {$this->getTableName()} WHERE id = :id");
+		$stmt->execute(['id' => $id]);
+		$data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		return $data ? $this->hydrate($data) : null;
+	}
+
 }

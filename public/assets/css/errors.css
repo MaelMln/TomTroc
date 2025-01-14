@@ -1,0 +1,31 @@
+/* Container d'erreur */
+.error-container {
+	text-align: center;
+	padding: 100px;
+	font-family: 'Inter', sans-serif;
+}
+
+/* Titre de l'erreur */
+.error-container h1 {
+	font-size: 3em;
+	color: #DC3545;
+	margin-bottom: 20px;
+}
+
+/* Message de l'erreur */
+.error-container p {
+	font-size: 1.2em;
+	color: #333;
+	margin-bottom: 20px;
+}
+
+/* Lien de retour */
+.error-container a {
+	color: #00AC66;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.error-container a:hover {
+	text-decoration: underline;
+}

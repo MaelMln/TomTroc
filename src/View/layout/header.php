@@ -16,6 +16,15 @@
 					$isLoggedIn = isset($_SESSION['user']);
 					?>
 					<?php if ($isLoggedIn): ?>
+						<li>
+							<a href="/messages">
+								Messagerie<?php
+								if (isset($newMessagesCount) && $newMessagesCount > 0) {
+									echo " <span class='notification'>{$newMessagesCount}</span>";
+								}
+								?>
+							</a>
+						</li>
 						<li><a href="/profile">Mon compte</a></li>
 						<li><a href="/logout">Déconnexion</a></li>
 					<?php else: ?>

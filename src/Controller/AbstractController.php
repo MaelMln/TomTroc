@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\MessageRepository;
 use Exception;
 use App\Service\ViewRenderer;
 
@@ -25,8 +26,18 @@ abstract class AbstractController
 		return new $entityClass();
 	}
 
+	protected function share(array &$data)
+	{
+		if (isset($_SESSION['user'])) {
+			$messageRepo = new MessageRepository();
+			$newMessagesCount = $messageRepo->countNewMessages($_SESSION['user']['id']);
+			$data['newMessagesCount'] = $newMessagesCount;
+		}
+	}
+
 	public function view(string $viewPath, array $data = [])
 	{
+		$this->share($data);
 		$view = new ViewRenderer();
 		$view->render($viewPath, $data);
 	}

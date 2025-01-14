@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Book;
+use App\Exception\MethodNotAllowedException;
+use App\Exception\NotFoundException;
+use App\Exception\UnauthorizedException;
 use App\Repository\BookRepository;
 use App\Service\RateLimit;
 use Exception;
@@ -21,33 +24,45 @@ class BookController extends AbstractController
 
 	public function index()
 	{
-		$search = $_GET['search'] ?? '';
+		$search = trim($_GET['search'] ?? '');
+		$page = isset($_GET['page']) && filter_var($_GET['page'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ? (int)$_GET['page'] : 1;
+		$limit = 10;
+		$offset = ($page - 1) * $limit;
+
 		if ($search) {
-			$books = $this->bookRepository->searchByTitle($search);
+			$books = $this->bookRepository->searchByTitle($search, $limit, $offset);
+			$totalBooks = $this->bookRepository->countSearchByTitle($search);
 		} else {
-			$books = $this->bookRepository->findAll();
+			$books = $this->bookRepository->findAllPaginated($limit, $offset);
+			$totalBooks = $this->bookRepository->countAllAvailable();
 		}
+
+		$totalPages = ceil($totalBooks / $limit);
 
 		$data = [
 			'title' => 'Nos livres à l\'échange',
 			'additionalCss' => ['book.css'],
 			'books' => $books,
+			'currentPage' => $page,
+			'totalPages' => $totalPages,
+			'search' => $search,
 		];
 		$this->view('book/index', $data);
 	}
 
-	public function show()
+
+
+
+	public function show($id)
 	{
-		$id = $_GET['id'] ?? null;
+		$id = filter_var($id, FILTER_VALIDATE_INT);
 		if (!$id) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new NotFoundException("Livre non trouvé.");
 		}
 
-		$book = $this->bookRepository->findById((int)$id);
+		$book = $this->bookRepository->findById($id);
 		if (!$book) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new NotFoundException("Livre non trouvé.");
 		}
 
 		$data = [
@@ -70,50 +85,44 @@ class BookController extends AbstractController
 		$this->handleBookForm();
 	}
 
-	public function edit()
+	public function edit($id)
 	{
 		if (!isset($_SESSION['user'])) {
-			header('Location: ' . $this->baseUrl . '/login');
-			exit;
+			throw new UnauthorizedException("Vous devez être connecté pour modifier un livre.");
 		}
 
-		$id = $_GET['id'] ?? null;
+		$id = filter_var($id, FILTER_VALIDATE_INT);
 		if (!$id) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new NotFoundException("Livre non trouvé.");
 		}
 
-		$book = $this->bookRepository->findById((int)$id);
+		$book = $this->bookRepository->findById($id);
 		if (!$book || $book->getUserId() !== $_SESSION['user']['id']) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new UnauthorizedException("Vous n'avez pas l'autorisation de modifier ce livre.");
 		}
 
 		$this->handleBookForm($book);
 	}
 
-	public function delete()
+
+	public function delete($id)
 	{
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new MethodNotAllowedException("Méthode non autorisée.");
 		}
 
 		if (!isset($_SESSION['user'])) {
-			header('Location: ' . $this->baseUrl . '/login');
-			exit;
+			throw new UnauthorizedException("Vous devez être connecté pour supprimer un livre.");
 		}
 
-		$id = $_GET['id'] ?? null;
+		$id = filter_var($id, FILTER_VALIDATE_INT);
 		if (!$id) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new NotFoundException("Livre non trouvé.");
 		}
 
-		$book = $this->bookRepository->findById((int)$id);
+		$book = $this->bookRepository->findById($id);
 		if (!$book || $book->getUserId() !== $_SESSION['user']['id']) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new UnauthorizedException("Vous n'avez pas l'autorisation de supprimer ce livre.");
 		}
 
 		if ($this->bookRepository->delete((int)$id)) {
@@ -128,7 +137,7 @@ class BookController extends AbstractController
 			exit;
 		} else {
 			$_SESSION['error'] = 'Une erreur est survenue lors de la suppression du livre.';
-			header('Location: ' . $this->baseUrl . '/books/show?id=' . $id);
+			header('Location: ' . $this->baseUrl . '/books/show/' . $id);
 			exit;
 		}
 	}
@@ -174,7 +183,7 @@ class BookController extends AbstractController
 						$book->setUpdatedAt(date('Y-m-d H:i:s'));
 
 						if ($this->bookRepository->save($book)) {
-							header('Location: ' . $this->baseUrl . '/books/show?id=' . $book->getId());
+							header('Location: ' . $this->baseUrl . '/books/show/' . $book->getId());
 							exit;
 						} else {
 							$errors[] = 'Une erreur est survenue lors de la mise à jour du livre.';
@@ -213,37 +222,33 @@ class BookController extends AbstractController
 		$errors = [];
 
 		$title = trim($input['title'] ?? '');
-		$author = trim($input['author'] ?? '');
-		$status = $input['status'] ?? 'disponible';
-
 		if (empty($title)) {
 			$errors[] = 'Le titre est requis.';
+		} elseif (strlen($title) > 255) {
+			$errors[] = 'Le titre ne doit pas dépasser 255 caractères.';
 		}
 
+		$author = trim($input['author'] ?? '');
 		if (empty($author)) {
 			$errors[] = 'L\'auteur est requis.';
+		} elseif (strlen($author) > 255) {
+			$errors[] = 'Le nom de l\'auteur ne doit pas dépasser 255 caractères.';
 		}
 
+		$status = $input['status'] ?? 'disponible';
 		if (!in_array($status, ['disponible', 'non_disponible'])) {
 			$errors[] = 'Statut de disponibilité invalide.';
 		}
 
-		if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
-			if ($file['error'] !== UPLOAD_ERR_OK) {
-				$errors[] = 'Erreur lors de l\'upload de l\'image.';
-			} else {
-				$allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-				if (!in_array(mime_content_type($file['tmp_name']), $allowedMimeTypes)) {
-					$errors[] = 'Type d\'image non supporté. Les types acceptés sont JPEG, PNG, GIF.';
-				}
-				if ($file['size'] > 2 * 1024 * 1024) {
-					$errors[] = 'L\'image ne doit pas dépasser 2MB.';
-				}
-			}
+		$description = trim($input['description'] ?? '');
+		if (strlen($description) > 1000) {
+			$errors[] = 'La description ne doit pas dépasser 1000 caractères.';
 		}
+
 
 		return $errors;
 	}
+
 
 	private function handleImageUpload(array $file): string
 	{

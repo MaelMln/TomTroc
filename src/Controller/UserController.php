@@ -30,11 +30,43 @@ class UserController extends AbstractController
 			if (!$this->rateLimit->isAllowed('register_attempts')) {
 				$data['errors'][] = 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
 			} else {
-				$data['errors'] = $this->validateRegistration($_POST);
+				$filters = [
+					'username' => FILTER_SANITIZE_STRING,
+					'email' => FILTER_VALIDATE_EMAIL,
+					'password' => FILTER_UNSAFE_RAW,
+				];
+
+				$filteredInput = filter_input_array(INPUT_POST, $filters);
+
+				if ($filteredInput['email'] === false) {
+					$data['errors'][] = 'Adresse email invalide.';
+				}
+
+				$password = $_POST['password'] ?? '';
+				if (strlen($password) < 6) {
+					$data['errors'][] = 'Le mot de passe doit contenir au moins 6 caractères.';
+				}
+
+				$username = trim($_POST['username'] ?? '');
+				if (empty($username)) {
+					$data['errors'][] = 'Le pseudo est requis.';
+				}
+
+				$userRepository = new UserRepository();
+				$duplicate = false;
+
+				if ($userRepository->findByEmail($filteredInput['email']) || $userRepository->findByUsername($username)) {
+					$duplicate = true;
+				}
+
+				if ($duplicate) {
+					$data['errors'][] = 'Ce pseudo ou email est déjà utilisé.';
+				}
 
 				if (empty($data['errors'])) {
-					$user = $this->createUser($_POST);
-					$userRepository = new UserRepository();
+					$user = $this->createUser($filteredInput);
+					$user->setUsername($username);
+					$user->setPassword(password_hash($password, PASSWORD_BCRYPT));
 
 					if ($userRepository->save($user)) {
 						header('Location: ' . $this->baseUrl . '/login');
@@ -147,20 +179,19 @@ class UserController extends AbstractController
 			id: null,
 			username: $input['username'] ?? '',
 			email: $input['email'] ?? '',
-			password: password_hash($input['password'], PASSWORD_BCRYPT),
+			password: '',
 			fullName: null,
 			profilePicture: null,
 		);
 	}
 
-	public function profile()
+	public function profile($id = null)
 	{
 		$userRepository = new UserRepository();
 		$bookRepository = new BookRepository();
 
-		$id = $_GET['id'] ?? null;
-
-		if (!$id) {
+		// Si aucun ID n'est fourni, afficher le profil de l'utilisateur connecté
+		if ($id === null) {
 			if (!isset($_SESSION['user'])) {
 				header('Location: ' . $this->baseUrl . '/login');
 				exit;
@@ -176,9 +207,7 @@ class UserController extends AbstractController
 		}
 
 		$bookCount = $bookRepository->countByUserId((int)$id);
-
 		$books = $bookRepository->findByUserId((int)$id);
-
 		$isOwnProfile = isset($_SESSION['user']) && $_SESSION['user']['id'] === $user->getId();
 
 		$data = [

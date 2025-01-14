@@ -64,6 +64,21 @@
 	background-color: #006D41;
 }
 
+.btn-create-book {
+	display: inline-block;
+	margin-top: 20px;
+	padding: 10px 20px;
+	background-color: #00AC66;
+	color: #fff;
+	text-decoration: none;
+	border-radius: 4px;
+	font-weight: 600;
+}
+
+.btn-create-book:hover {
+	background-color: #006D41;
+}
+
 /* Formulaire général */
 .form-group {
 	margin-bottom: 15px;

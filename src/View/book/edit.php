@@ -11,7 +11,7 @@
 		</div>
 	<?php endif; ?>
 
-	<form method="POST" action="<?php echo $baseUrl; ?>/books/edit?id=<?php echo $book->getId(); ?>" enctype="multipart/form-data" novalidate>
+	<form method="POST" action="<?php echo $baseUrl; ?>/books/edit/<?php echo $book->getId(); ?>" enctype="multipart/form-data" novalidate>
 		<div class="form-group">
 			<label for="title">Titre</label>
 			<input type="text" id="title" name="title" value="<?php echo htmlspecialchars($_POST['title'] ?? $book->getTitle()); ?>" required>
