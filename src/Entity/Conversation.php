@@ -8,8 +8,8 @@ class Conversation
 	private ?string $updatedAt = null;
 	private ?array $otherUser = null;
 
-	private string $lastMessage = '';
-	private string $lastSentAt = '';
+	private ?string $lastMessage = null;
+	private ?string $lastSentAt = null;
 
 	public function __construct(
 		private ?int $id,
@@ -74,23 +74,23 @@ class Conversation
 		return $this;
 	}
 
-	public function getLastMessage(): string
+	public function getLastMessage(): ?string
 	{
 		return $this->lastMessage;
 	}
 
-	public function setLastMessage(string $lastMessage): self
+	public function setLastMessage(?string $lastMessage): self
 	{
 		$this->lastMessage = $lastMessage;
 		return $this;
 	}
 
-	public function getLastSentAt(): string
+	public function getLastSentAt(): ?string
 	{
 		return $this->lastSentAt;
 	}
 
-	public function setLastSentAt(string $lastSentAt): self
+	public function setLastSentAt(?string $lastSentAt): self
 	{
 		$this->lastSentAt = $lastSentAt;
 		return $this;

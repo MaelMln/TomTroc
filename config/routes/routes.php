@@ -48,10 +48,6 @@ return [
 		'path' => '/messages',
 		'controller' => 'App\Controller\MessagingController::main',
 	],
-	'send_message' => [
-		'path' => '/messages/send',
-		'controller' => 'App\Controller\MessagingController::send',
-	],
 	'view_conversation' => [
 		'path' => '/messages/view/{conversation_id}',
 		'controller' => 'App\Controller\MessagingController::viewConversation',
@@ -67,5 +63,13 @@ return [
 	'fetch_conversation' => [
 		'path' => '/messages/fetch_conversation',
 		'controller' => 'App\Controller\MessagingController::fetchConversation',
+	],
+	'fetch_unread_count' => [
+		'path' => '/messages/count_unread',
+		'controller' => 'App\Controller\MessagingController::countUnread',
+	],
+	'start_conversation' => [
+		'path' => '/conversation/start/{to_user_id}',
+		'controller' => 'App\Controller\ConversationController::startConversation',
 	],
 ];

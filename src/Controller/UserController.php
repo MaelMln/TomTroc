@@ -190,7 +190,6 @@ class UserController extends AbstractController
 		$userRepository = new UserRepository();
 		$bookRepository = new BookRepository();
 
-		// Si aucun ID n'est fourni, afficher le profil de l'utilisateur connecté
 		if ($id === null) {
 			if (!isset($_SESSION['user'])) {
 				header('Location: ' . $this->baseUrl . '/login');

@@ -11,6 +11,7 @@ use ReflectionClass;
 abstract class AbstractRepository
 {
 	protected PDO $db;
+	protected array $excludedFields = [];
 
 	public function __construct()
 	{
@@ -72,7 +73,7 @@ abstract class AbstractRepository
 	protected function hydrate(array $data): object
 	{
 		$className = $this->getEntityClass();
-		$reflectionClass = new ReflectionClass($className);
+		$reflectionClass = new \ReflectionClass($className);
 		$entity = $reflectionClass->newInstanceWithoutConstructor();
 
 		foreach ($data as $column => $value) {
@@ -88,7 +89,7 @@ abstract class AbstractRepository
 		return $entity;
 	}
 
-	private function extract(object $entity): array
+	protected function extract(object $entity): array
 	{
 		$reflect = new \ReflectionClass($entity);
 		$data = [];
@@ -97,9 +98,15 @@ abstract class AbstractRepository
 			if (str_starts_with($method->getName(), 'get')) {
 				$property = lcfirst(substr($method->getName(), 3));
 				$column = TextReformat::camelToSnake($property);
+
+				if (in_array($column, $this->excludedFields)) {
+					continue;
+				}
+
 				$value = $method->invoke($entity);
 
 				if ($property === 'createdAt') {
+					$data[$column] = $value;
 					continue;
 				}
 

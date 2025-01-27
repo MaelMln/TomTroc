@@ -17,10 +17,15 @@ class ConversationRepository extends AbstractRepository
 		return Conversation::class;
 	}
 
+	protected array $excludedFields = ['last_message', 'last_sent_at', 'other_user'];
+
 	public function findConversation(int $userOneId, int $userTwoId): ?Conversation
 	{
-		$userOneId = min($userOneId, $userTwoId);
-		$userTwoId = max($userOneId, $userTwoId);
+		$temp1 = $userOneId;
+		$temp2 = $userTwoId;
+
+		$userOneId = min($temp1, $temp2);
+		$userTwoId = max($temp1, $temp2);
 
 		$stmt = $this->db->prepare("SELECT * FROM {$this->getTableName()} WHERE user_one_id = :user_one_id AND user_two_id = :user_two_id");
 		$stmt->execute([
@@ -33,8 +38,11 @@ class ConversationRepository extends AbstractRepository
 
 	public function createConversation(int $userOneId, int $userTwoId): Conversation
 	{
-		$userOneId = min($userOneId, $userTwoId);
-		$userTwoId = max($userOneId, $userTwoId);
+		$temp1 = $userOneId;
+		$temp2 = $userTwoId;
+
+		$userOneId = min($temp1, $temp2);
+		$userTwoId = max($temp1, $temp2);
 
 		$conversation = new Conversation(
 			id: null,
@@ -56,24 +64,25 @@ class ConversationRepository extends AbstractRepository
 	public function findAllConversationsWithUsersByUserId(int $userId, int $limit = 10, int $offset = 0): array
 	{
 		$stmt = $this->db->prepare("
-        SELECT c.*, m.content AS last_message, m.sent_at AS last_sent_at,
-               u.id AS user_id, u.username, u.profile_picture
-        FROM {$this->getTableName()} c
-        LEFT JOIN (
-            SELECT conversation_id, content, sent_at
-            FROM messages
-            WHERE id IN (
-                SELECT MAX(id) FROM messages GROUP BY conversation_id
-            )
-        ) m ON c.id = m.conversation_id
-        JOIN users u ON (u.id = CASE
-                                    WHEN c.user_one_id = :user_id THEN c.user_two_id
-                                    ELSE c.user_one_id
-                                END)
-        WHERE c.user_one_id = :user_id OR c.user_two_id = :user_id
-        ORDER BY m.sent_at DESC
-        LIMIT :limit OFFSET :offset
-    ");
+            SELECT c.id, c.user_one_id, c.user_two_id, c.created_at, c.updated_at,
+                   m.content AS last_message, m.sent_at AS last_sent_at,
+                   u.id AS user_id, u.username, u.profile_picture
+            FROM conversations c
+            LEFT JOIN (
+                SELECT conversation_id, content, sent_at
+                FROM messages
+                WHERE id IN (
+                    SELECT MAX(id) FROM messages GROUP BY conversation_id
+                )
+            ) m ON c.id = m.conversation_id
+            JOIN users u ON u.id = CASE
+                                        WHEN c.user_one_id = :user_id THEN c.user_two_id
+                                        ELSE c.user_one_id
+                                    END
+            WHERE c.user_one_id = :user_id OR c.user_two_id = :user_id
+            ORDER BY m.sent_at DESC
+            LIMIT :limit OFFSET :offset
+        ");
 		$stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 		$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 		$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);

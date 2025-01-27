@@ -280,3 +280,10 @@
 	font-size: 14px;
 	color: #333;
 }
+
+.read-indicator {
+	font-size: 0.7em;
+	color: #28a745;
+	margin-left: 5px;
+	display: inline-block;
+}

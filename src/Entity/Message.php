@@ -6,6 +6,8 @@ class Message
 {
 	private string $createdAt;
 	private ?string $updatedAt = null;
+	private bool $isReadByUserOne = false;
+	private bool $isReadByUserTwo = false;
 
 	public function __construct(
 		private ?int $id,
@@ -75,5 +77,25 @@ class Message
 	public function setUpdatedAt(string $updatedAt): void
 	{
 		$this->updatedAt = $updatedAt;
+	}
+
+	public function isReadByUserOne(): bool
+	{
+		return $this->isReadByUserOne;
+	}
+
+	public function setReadByUserOne(bool $isRead): void
+	{
+		$this->isReadByUserOne = $isRead;
+	}
+
+	public function isReadByUserTwo(): bool
+	{
+		return $this->isReadByUserTwo;
+	}
+
+	public function setReadByUserTwo(bool $isRead): void
+	{
+		$this->isReadByUserTwo = $isRead;
 	}
 }

@@ -52,9 +52,8 @@
 			</form>
 			<a href="<?php echo $baseUrl; ?>/books/create" class="btn-create-book">Ajouter un Livre</a>
 		</div>
-	<?php else: ?>
-		<a href="<?php echo $baseUrl; ?>/messages/send?to=<?php echo $user->getId(); ?>" class="btn-message">Écrire un
-			message</a>
+	<?php elseif (isset($_SESSION['user'])): ?>
+		<a href="<?php echo $baseUrl; ?>/conversation/start/<?php echo $user->getId(); ?>" class="btn-message">Écrire un message</a>
 	<?php endif; ?>
 
 	<div class="user-books">

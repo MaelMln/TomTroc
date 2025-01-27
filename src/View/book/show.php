@@ -23,13 +23,7 @@
 	<?php endif; ?>
 
 	<a href="<?php echo $baseUrl; ?>/profile/<?php echo $book->getUserId(); ?>" class="btn-profile">Voir le profil du propriétaire</a>
-	<a href="<?php echo $baseUrl; ?>/messages/send?to=<?php echo $book->getUserId(); ?>&book=<?php echo $book->getId(); ?>" class="btn-message">Envoyer un message</a>
-
-	<?php if (isset($_SESSION['user']) && $_SESSION['user']['id'] === $book->getUserId()): ?>
-		<a href="<?php echo $baseUrl; ?>/books/edit/<?php echo $book->getId(); ?>" class="btn-edit">Modifier</a>
-
-		<form method="POST" action="<?php echo $baseUrl; ?>/books/delete/<?php echo $book->getId(); ?>" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ? Cette action est irréversible.');">
-			<button type="submit" class="btn-delete">Supprimer</button>
-		</form>
+	<?php if (isset($_SESSION['user']) && $_SESSION['user']['id'] !== $book->getUserId()): ?>
+		<a href="<?php echo $baseUrl; ?>/conversation/start/<?php echo $book->getUserId(); ?>" class="btn-message">Envoyer un message</a>
 	<?php endif; ?>
 </div>

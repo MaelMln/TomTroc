@@ -26,7 +26,7 @@ class BookController extends AbstractController
 	{
 		$search = trim($_GET['search'] ?? '');
 		$page = isset($_GET['page']) && filter_var($_GET['page'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ? (int)$_GET['page'] : 1;
-		$limit = 10;
+		$limit = 12;
 		$offset = ($page - 1) * $limit;
 
 		if ($search) {

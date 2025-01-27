@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Repository\ConversationRepository;
 use App\Repository\MessageRepository;
 use App\Service\RateLimit;
+use App\Exception\UnauthorizedException;
+use App\Exception\NotFoundException;
+use App\Exception\MethodNotAllowedException;
 use Exception;
 
 class MessagingController extends AbstractController
@@ -12,7 +15,6 @@ class MessagingController extends AbstractController
 	private ConversationRepository $conversationRepo;
 	private MessageRepository $messageRepo;
 	private RateLimit $rateLimit;
-
 
 	public function __construct()
 	{
@@ -49,75 +51,6 @@ class MessagingController extends AbstractController
 		$this->view('messaging/main', $data);
 	}
 
-
-	public function send()
-	{
-		if (!isset($_SESSION['user'])) {
-			header('Location: ' . $this->baseUrl . '/login');
-			exit;
-		}
-
-		$toUserId = isset($_GET['to']) ? (int)$_GET['to'] : null;
-		$bookId = isset($_GET['book']) ? (int)$_GET['book'] : null;
-
-		if (!$toUserId || !$bookId) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
-		}
-
-		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$content = trim($_POST['message'] ?? '');
-			$errors = [];
-
-			if ($content === '') {
-				$errors[] = 'Le message ne peut pas être vide.';
-			} else {
-				$currentUserId = $_SESSION['user']['id'];
-				$recipientUserId = $toUserId;
-
-				$conversation = $this->conversationRepo->findConversation($currentUserId, $recipientUserId);
-				if (!$conversation) {
-					$conversation = $this->conversationRepo->createConversation($currentUserId, $recipientUserId);
-				}
-
-				if ($conversation->getId() === null) {
-					$errors[] = 'Erreur lors de la création de la conversation.';
-				} else {
-					$message = $this->messageRepo->createMessage(
-						conversationId: $conversation->getId(),
-						senderId: $currentUserId,
-						content: $content
-					);
-
-					header('Location: ' . $this->baseUrl . '/messages/view/' . $conversation->getId());
-					exit;
-				}
-			}
-
-			if (!empty($errors)) {
-				$data = [
-					'title' => 'Envoyer un message',
-					'additionalCss' => ['messaging.css'],
-					'toUserId' => $toUserId,
-					'bookId' => $bookId,
-					'errors' => $errors,
-				];
-				$this->view('messaging/send', $data);
-				return;
-			}
-		}
-
-		$data = [
-			'title' => 'Envoyer un message',
-			'additionalCss' => ['messaging.css'],
-			'toUserId' => $toUserId,
-			'bookId' => $bookId,
-			'errors' => [],
-		];
-		$this->view('messaging/send', $data);
-	}
-
-
 	public function viewConversation($conversation_id)
 	{
 		if (!isset($_SESSION['user'])) {
@@ -125,46 +58,83 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$conversationId = (int)$conversation_id;
+		$conversationId = filter_var($conversation_id, FILTER_VALIDATE_INT);
 		if (!$conversationId) {
-			header('Location: ' . $this->baseUrl . '/books');
-			exit;
+			throw new NotFoundException("Conversation non trouvée.");
 		}
 
 		$conversation = $this->conversationRepo->findById($conversationId);
 		if (!$conversation ||
 			($conversation->getUserOneId() !== $_SESSION['user']['id'] &&
 				$conversation->getUserTwoId() !== $_SESSION['user']['id'])) {
-			throw new \App\Exception\UnauthorizedException("Accès interdit à cette conversation.");
+			throw new UnauthorizedException("Accès interdit à cette conversation.");
 		}
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$content = trim($_POST['message'] ?? '');
-			$errors = [];
-
-			if ($content === '') {
-				$errors[] = 'Le message ne peut pas être vide.';
-			} else {
-				$message = $this->messageRepo->createMessage(
-					conversationId: $conversation->getId(),
-					senderId: $_SESSION['user']['id'],
-					content: $content
-				);
-				header('Location: ' . $this->baseUrl . '/messages/view/' . $conversation->getId());
-				exit;
-			}
-		}
-
+		$isUserOne = false;
+		
 		$messages = $this->messageRepo->findMessagesByConversation($conversationId);
+
+		$this->messageRepo->markAllAsReadByUser($conversationId, $_SESSION['user']['id']);
 
 		$data = [
 			'title' => 'Conversation',
 			'additionalCss' => ['messaging.css'],
 			'conversation' => $conversation,
 			'messages' => $messages,
-			'errors' => $errors ?? [],
+			'isUserOne' => $isUserOne,
+			'errors' => [],
 		];
 		$this->view('messaging/view', $data);
+	}
+
+	public function sendAjax()
+	{
+		try {
+			if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+				throw new MethodNotAllowedException("Méthode HTTP non autorisée.");
+			}
+
+			if (!isset($_SESSION['user'])) {
+				throw new UnauthorizedException("Non autorisé.");
+			}
+
+			$input = json_decode(file_get_contents('php://input'), true);
+			$conversationId = isset($input['conversation_id']) ? filter_var($input['conversation_id'], FILTER_VALIDATE_INT) : null;
+			$messageContent = isset($input['message']) ? trim($input['message']) : '';
+
+			if (!$conversationId || $messageContent === '') {
+				throw new Exception("Paramètres manquants ou message vide.");
+			}
+
+			$conversation = $this->conversationRepo->findById($conversationId);
+			if (!$conversation ||
+				($conversation->getUserOneId() !== $_SESSION['user']['id'] &&
+					$conversation->getUserTwoId() !== $_SESSION['user']['id'])) {
+				throw new UnauthorizedException("Accès interdit à cette conversation.");
+			}
+
+			if (!$this->rateLimit->isAllowed('send_message_' . $_SESSION['user']['id'])) {
+				throw new Exception("Trop de messages envoyés. Veuillez réessayer plus tard.");
+			}
+
+			$message = $this->messageRepo->createMessage(
+				conversationId: (int)$conversationId,
+				senderId: $_SESSION['user']['id'],
+				content: $messageContent
+			);
+
+			echo json_encode(['success' => true, 'message_id' => $message->getId()]);
+		} catch (MethodNotAllowedException $e) {
+			http_response_code(405);
+			echo json_encode(['error' => $e->getMessage()]);
+		} catch (UnauthorizedException $e) {
+			http_response_code(403);
+			echo json_encode(['error' => $e->getMessage()]);
+		} catch (Exception $e) {
+			http_response_code(400);
+			echo json_encode(['error' => $e->getMessage()]);
+		}
+		exit;
 	}
 
 
@@ -176,8 +146,8 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$conversationId = $_GET['conversation_id'] ?? null;
-		$lastMessageId = $_GET['last_message_id'] ?? 0;
+		$conversationId = isset($_GET['conversation_id']) ? filter_var($_GET['conversation_id'], FILTER_VALIDATE_INT) : null;
+		$lastMessageId = isset($_GET['last_message_id']) ? filter_var($_GET['last_message_id'], FILTER_VALIDATE_INT) : 0;
 
 		if (!$conversationId) {
 			http_response_code(400);
@@ -185,7 +155,7 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$conversation = $this->conversationRepo->findById((int)$conversationId);
+		$conversation = $this->conversationRepo->findById($conversationId);
 		if (!$conversation ||
 			($conversation->getUserOneId() !== $_SESSION['user']['id'] &&
 				$conversation->getUserTwoId() !== $_SESSION['user']['id'])) {
@@ -194,7 +164,7 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$newMessages = $this->messageRepo->findNewMessages((int)$conversationId, (int)$lastMessageId);
+		$newMessages = $this->messageRepo->findNewMessages($conversationId, $lastMessageId);
 
 		$messagesData = [];
 		foreach ($newMessages as $message) {
@@ -202,61 +172,13 @@ class MessagingController extends AbstractController
 				'id' => $message->getId(),
 				'conversation_id' => $message->getConversationId(),
 				'sender_id' => $message->getSenderId(),
-				'content' => $message->getContent(),
+				'content' => htmlspecialchars($message->getContent()),
 				'sent_at' => $message->getSentAt(),
+				'is_read' => $message->isRead(),
 			];
 		}
 
 		echo json_encode(['messages' => $messagesData]);
-		exit;
-	}
-
-	public function sendAjax()
-	{
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-			http_response_code(405);
-			echo json_encode(['error' => 'Méthode non autorisée']);
-			exit;
-		}
-
-		if (!isset($_SESSION['user'])) {
-			http_response_code(401);
-			echo json_encode(['error' => 'Non autorisé']);
-			exit;
-		}
-
-		$input = json_decode(file_get_contents('php://input'), true);
-		$conversationId = $input['conversation_id'] ?? null;
-		$messageContent = trim($input['message'] ?? '');
-
-		if (!$conversationId || $messageContent === '') {
-			http_response_code(400);
-			echo json_encode(['error' => 'Paramètres manquants ou message vide']);
-			exit;
-		}
-
-		$conversation = $this->conversationRepo->findById((int)$conversationId);
-		if (!$conversation ||
-			($conversation->getUserOneId() !== $_SESSION['user']['id'] &&
-				$conversation->getUserTwoId() !== $_SESSION['user']['id'])) {
-			http_response_code(403);
-			echo json_encode(['error' => 'Accès interdit']);
-			exit;
-		}
-
-		if (!$this->rateLimit->isAllowed('send_message_' . $_SESSION['user']['id'])) {
-			http_response_code(429);
-			echo json_encode(['error' => 'Trop de messages envoyés. Veuillez réessayer plus tard.']);
-			exit;
-		}
-
-		$message = $this->messageRepo->createMessage(
-			conversationId: (int)$conversationId,
-			senderId: $_SESSION['user']['id'],
-			content: $messageContent
-		);
-
-		echo json_encode(['success' => true, 'message_id' => $message->getId()]);
 		exit;
 	}
 
@@ -274,14 +196,14 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$conversationId = $_GET['conversation_id'] ?? null;
+		$conversationId = isset($_GET['conversation_id']) ? filter_var($_GET['conversation_id'], FILTER_VALIDATE_INT) : null;
 		if (!$conversationId) {
 			http_response_code(400);
 			echo json_encode(['error' => 'Paramètres manquants']);
 			exit;
 		}
 
-		$conversation = $this->conversationRepo->findById((int)$conversationId);
+		$conversation = $this->conversationRepo->findById($conversationId);
 		if (!$conversation ||
 			($conversation->getUserOneId() !== $_SESSION['user']['id'] &&
 				$conversation->getUserTwoId() !== $_SESSION['user']['id'])) {
@@ -290,7 +212,9 @@ class MessagingController extends AbstractController
 			exit;
 		}
 
-		$messages = $this->messageRepo->findMessagesByConversation((int)$conversationId);
+		$this->messageRepo->markAllAsRead($conversationId, $_SESSION['user']['id']);
+
+		$messages = $this->messageRepo->findMessagesByConversation($conversationId);
 
 		$messagesData = [];
 		foreach ($messages as $message) {
@@ -298,13 +222,44 @@ class MessagingController extends AbstractController
 				'id' => $message->getId(),
 				'conversation_id' => $message->getConversationId(),
 				'sender_id' => $message->getSenderId(),
-				'content' => $message->getContent(),
+				'content' => htmlspecialchars($message->getContent()),
 				'sent_at' => $message->getSentAt(),
+				'is_read_by_user_one' => $message->isReadByUserOne(),
+				'is_read_by_user_two' => $message->isReadByUserTwo(),
 			];
 		}
 
 		echo json_encode(['messages' => $messagesData]);
 		exit;
 	}
+
+	public function countUnread()
+	{
+		try {
+			if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+				throw new MethodNotAllowedException("Méthode HTTP non autorisée.");
+			}
+
+			if (!isset($_SESSION['user'])) {
+				throw new UnauthorizedException("Non autorisé.");
+			}
+
+			$userId = $_SESSION['user']['id'];
+			$count = $this->messageRepo->countNewMessages($userId);
+
+			echo json_encode(['count' => $count]);
+		} catch (MethodNotAllowedException $e) {
+			http_response_code(405);
+			echo json_encode(['error' => $e->getMessage()]);
+		} catch (UnauthorizedException $e) {
+			http_response_code(403);
+			echo json_encode(['error' => $e->getMessage()]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['error' => 'Erreur interne du serveur.']);
+		}
+		exit;
+	}
+
 
 }

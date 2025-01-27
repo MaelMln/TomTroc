@@ -49,6 +49,8 @@
 </div>
 
 <script>
+	const isUserOne = <?php echo json_encode($isUserOne); ?>;
+	const currentUserId = <?php echo json_encode($_SESSION['user']['id']); ?>;
 	document.addEventListener('DOMContentLoaded', function() {
 		const conversationItems = document.querySelectorAll('.conversation-item');
 		const chatHeader = document.getElementById('chat-header');
@@ -111,6 +113,7 @@
 				})
 				.catch(error => {
 					console.error('Erreur:', error);
+					alert('Une erreur est survenue lors de l\'envoi du message.');
 				});
 		});
 
@@ -123,8 +126,30 @@
 						data.messages.forEach(message => {
 							const messageDiv = document.createElement('div');
 							messageDiv.classList.add('message');
-							messageDiv.classList.add(message.sender_id === <?php echo json_encode($_SESSION['user']['id']); ?> ? 'sent' : 'received');
+
+							if (message.sender_id === <?php echo json_encode($_SESSION['user']['id']); ?>) {
+								messageDiv.classList.add('sent');
+							} else {
+								messageDiv.classList.add('received');
+							}
+
 							messageDiv.innerHTML = `<p>${escapeHtml(message.content)}</p><span>${message.sent_at}</span>`;
+
+							if (message.sender_id === <?php echo json_encode($_SESSION['user']['id']); ?>) {
+
+								<?php echo json_encode($isUserOne); ?>;
+
+								if (isUserOne) {
+									if (message.is_read_by_user_two) {
+										messageDiv.innerHTML += `<span class="read-indicator">Lu</span>`;
+									}
+								} else {
+									if (message.is_read_by_user_one) {
+										messageDiv.innerHTML += `<span class="read-indicator">Lu</span>`;
+									}
+								}
+							}
+
 							chatMessages.appendChild(messageDiv);
 						});
 						chatMessages.scrollTop = chatMessages.scrollHeight;
