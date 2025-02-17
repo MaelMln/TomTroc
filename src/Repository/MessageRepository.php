@@ -103,7 +103,7 @@ class MessageRepository extends AbstractRepository
 	}
 
 
-	public function markAllAsReadByUser(int $conversationId, int $userId): bool
+	public function markAllAsRead(int $conversationId, int $userId): bool
 	{
 		$conversation = $this->conversationRepo->findById($conversationId);
 		if (!$conversation) {

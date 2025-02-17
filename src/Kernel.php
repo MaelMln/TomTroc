@@ -5,24 +5,46 @@ namespace App;
 use App\Exception\MethodNotAllowedException;
 use App\Exception\NotFoundException;
 use App\Exception\UnauthorizedException;
+use App\Util\Config;
 use App\Util\Router;
 
 class Kernel
 {
+	private $config;
+
+	public function __construct() {
+		$configInstance = Config::getInstance();
+		$this->config = $configInstance->all();
+
+		if ($this->config['env'] === 'development') {
+			ini_set('display_errors', 1);
+			ini_set('display_startup_errors', 1);
+			error_reporting(E_ALL);
+		} else {
+			ini_set('display_errors', 0);
+			ini_set('display_startup_errors', 0);
+			error_reporting(E_ALL);
+		}
+
+		session_start();
+
+	}
 	public function handleRequest()
 	{
-		$config = require ROOT_DIR . '/config/config.php';
-		$routes = include ROOT_DIR . '/config/routes/routes.php';
+		$routes = require ROOT_DIR . '/config/routes/routes.php';
 		$requestUri = $_SERVER['REQUEST_URI'] ?? "/";
 
-		$router = new Router($routes);
-		$router->dispatch($requestUri);
+		try {
+			$router = new Router($routes);
+			$router->dispatch($requestUri);
+		} catch (\Throwable $e) {
+			$this->handleException($e);
+		}
 	}
 
 	public function handleException($exception)
 	{
-		$config = require ROOT_DIR . '/config/config.php';
-		$baseUrl = $config['base_url'];
+		$baseUrl = $this->config['base_url'];
 
 		if ($exception instanceof NotFoundException) {
 			$statusCode = 404;
@@ -45,7 +67,7 @@ class Kernel
 			'statusMessage' => $statusMessage,
 			'exception' => $exception,
 			'baseUrl' => $baseUrl,
-			'config' => $config,
+			'config' => $this->config,
 		];
 
 		extract($data);

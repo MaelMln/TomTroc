@@ -2,12 +2,14 @@
 
 namespace App\Service;
 
+use App\Util\Config;
+
 class ViewRenderer
 {
 	public function render(string $viewPath, array $data = [])
 	{
-		$config = require ROOT_DIR . '/config/config.php';
-		$data['baseUrl'] = $config['base_url'];
+		$config = Config::getInstance();
+		$data['baseUrl'] = $config->get('base_url');
 
 		extract($data);
 

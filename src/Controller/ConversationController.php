@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\ConversationRepository;
 use App\Exception\UnauthorizedException;
 use App\Exception\NotFoundException;
+use App\Repository\UserRepository;
 
 class ConversationController extends AbstractController
 {
@@ -29,7 +30,7 @@ class ConversationController extends AbstractController
 			throw new NotFoundException("Utilisateur destinataire non trouvé.");
 		}
 
-		$userRepo = new \App\Repository\UserRepository();
+		$userRepo = new UserRepository();
 		$recipient = $userRepo->findById($toUserId);
 		if (!$recipient) {
 			throw new NotFoundException("Utilisateur destinataire non trouvé.");
@@ -40,7 +41,7 @@ class ConversationController extends AbstractController
 			$conversation = $this->conversationRepo->createConversation($fromUserId, $toUserId);
 		}
 
-		header('Location: ' . $this->baseUrl . '/messages/view/' . $conversation->getId());
+		header('Location: ' . $this->baseUrl . '/messages?conversation_id=' . $conversation->getId());
 		exit;
 	}
 

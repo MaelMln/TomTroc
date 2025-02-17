@@ -6,16 +6,20 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Repository\BookRepository;
 use App\Service\RateLimit;
+use App\Service\ImageUploadService;
+use App\Service\AuthService;
 use Exception;
 
 class UserController extends AbstractController
 {
 	private RateLimit $rateLimit;
+	private ImageUploadService $imageService;
 
 	public function __construct()
 	{
 		parent::__construct();
 		$this->rateLimit = new RateLimit();
+		$this->imageService = new ImageUploadService(ROOT_DIR);
 	}
 
 	public function register()
@@ -31,11 +35,9 @@ class UserController extends AbstractController
 				$data['errors'][] = 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
 			} else {
 				$filters = [
-					'username' => FILTER_SANITIZE_STRING,
 					'email' => FILTER_VALIDATE_EMAIL,
 					'password' => FILTER_UNSAFE_RAW,
 				];
-
 				$filteredInput = filter_input_array(INPUT_POST, $filters);
 
 				if ($filteredInput['email'] === false) {
@@ -47,19 +49,14 @@ class UserController extends AbstractController
 					$data['errors'][] = 'Le mot de passe doit contenir au moins 6 caractères.';
 				}
 
-				$username = trim($_POST['username'] ?? '');
+				$username = trim(htmlspecialchars( $_POST['username'] ?? ''));
 				if (empty($username)) {
 					$data['errors'][] = 'Le pseudo est requis.';
 				}
 
 				$userRepository = new UserRepository();
-				$duplicate = false;
 
 				if ($userRepository->findByEmail($filteredInput['email']) || $userRepository->findByUsername($username)) {
-					$duplicate = true;
-				}
-
-				if ($duplicate) {
 					$data['errors'][] = 'Ce pseudo ou email est déjà utilisé.';
 				}
 
@@ -103,12 +100,7 @@ class UserController extends AbstractController
 					$user = $userRepository->findByEmail($email);
 
 					$dummyHash = '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
-
-					if ($user) {
-						$passwordHash = $user->getPassword();
-					} else {
-						$passwordHash = $dummyHash;
-					}
+					$passwordHash = $user ? $user->getPassword() : $dummyHash;
 
 					if (password_verify($password, $passwordHash)) {
 						if ($user) {
@@ -137,69 +129,17 @@ class UserController extends AbstractController
 		exit;
 	}
 
-	private function validateRegistration(array $input): array
-	{
-		$errors = [];
-		$username = trim($input['username'] ?? '');
-		$email = trim($input['email'] ?? '');
-		$password = $input['password'] ?? '';
-
-		if (empty($username) || empty($email) || empty($password)) {
-			$errors[] = 'Tous les champs sont requis.';
-			return $errors;
-		}
-
-		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$errors[] = 'Adresse email invalide.';
-		}
-
-		if (strlen($password) < 6) {
-			$errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
-		}
-
-		$userRepository = new UserRepository();
-		$duplicate = false;
-
-		if ($userRepository->findByEmail($email) || $userRepository->findByUsername($username)) {
-			$duplicate = true;
-		}
-
-		if ($duplicate) {
-			$errors[] = 'Un email de confirmation a été envoyé à votre adresse mail.';
-			// Demande de validation par email. Si l'email est déjà présent dans la bdd, alors on informe de la tentative
-			// de création de compte avec l'email déjà existant, sinon, réel message de confirmation d'inscription.
-		}
-
-		return $errors;
-	}
-
-	private function createUser(array $input): User
-	{
-		return new User(
-			id: null,
-			username: $input['username'] ?? '',
-			email: $input['email'] ?? '',
-			password: '',
-			fullName: null,
-			profilePicture: null,
-		);
-	}
-
 	public function profile($id = null)
 	{
 		$userRepository = new UserRepository();
 		$bookRepository = new BookRepository();
 
 		if ($id === null) {
-			if (!isset($_SESSION['user'])) {
-				header('Location: ' . $this->baseUrl . '/login');
-				exit;
-			}
+			AuthService::ensureUserLoggedIn();
 			$id = $_SESSION['user']['id'];
 		}
 
 		$user = $userRepository->findById((int)$id);
-
 		if (!$user) {
 			header('Location: ' . $this->baseUrl);
 			exit;
@@ -226,14 +166,16 @@ class UserController extends AbstractController
 			if (empty($errors)) {
 				$user->setUsername($input['username']);
 				$user->setEmail($input['email']);
-
 				if (!empty($input['password'])) {
 					$user->setPassword(password_hash($input['password'], PASSWORD_BCRYPT));
 				}
 
 				if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
 					try {
-						$profilePicturePath = $this->handleImageUpload($_FILES['profile_picture'], 'profile_pictures');
+						if ($user->getProfilePicture()) {
+							$this->imageService->delete($user->getProfilePicture());
+						}
+						$profilePicturePath = $this->imageService->upload($_FILES['profile_picture'], 'profile_pictures');
 						$user->setProfilePicture($profilePicturePath);
 					} catch (Exception $e) {
 						$errors[] = $e->getMessage();
@@ -244,10 +186,10 @@ class UserController extends AbstractController
 					if ($userRepository->save($user)) {
 						$_SESSION['user']['username'] = $user->getUsername();
 						$_SESSION['user']['email'] = $user->getEmail();
-						header('Location: ' . $this->baseUrl . '/profile?id=' . $user->getId());
+						header('Location: ' . $this->baseUrl . '/profile/' . $user->getId());
 						exit;
 					} else {
-						$errors[] = 'Une erreur est survenue lors de la mise à jour de votre profil.';
+						$errors[] = 'Erreur lors de la mise à jour du profil.';
 					}
 				}
 			}
@@ -263,9 +205,6 @@ class UserController extends AbstractController
 		$errors = [];
 
 		$username = trim($input['username'] ?? '');
-		$email = trim($input['email'] ?? '');
-		$password = $input['password'] ?? '';
-
 		if (empty($username)) {
 			$errors[] = 'Le pseudo est requis.';
 		} else {
@@ -276,6 +215,7 @@ class UserController extends AbstractController
 			}
 		}
 
+		$email = trim($input['email'] ?? '');
 		if (empty($email)) {
 			$errors[] = 'L\'adresse email est requise.';
 		} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -288,47 +228,23 @@ class UserController extends AbstractController
 			}
 		}
 
+		$password = $input['password'] ?? '';
 		if (!empty($password) && strlen($password) < 6) {
 			$errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
-		}
-
-		if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
-			if ($file['error'] !== UPLOAD_ERR_OK) {
-				$errors[] = 'Erreur lors de l\'upload de la photo de profil.';
-			} else {
-				$allowedMimeTypes = ['image/jpeg', 'image/png'];
-				if (!in_array(mime_content_type($file['tmp_name']), $allowedMimeTypes)) {
-					$errors[] = 'Type d\'image non supporté. Les types acceptés sont JPEG, PNG.';
-				}
-				if ($file['size'] > 2 * 1024 * 1024) {
-					$errors[] = 'La photo de profil ne doit pas dépasser 2Mo.';
-				}
-			}
 		}
 
 		return $errors;
 	}
 
-	private function handleImageUpload(array $file, string $subDir = ''): string
+	private function createUser(array $input): User
 	{
-		$uploadDir = ROOT_DIR . '/public/assets/uploads/' . $subDir . '/';
-		if (!is_dir($uploadDir)) {
-			mkdir($uploadDir, 0755, true);
-		}
-
-		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-		$allowedExtensions = ['jpg', 'jpeg', 'png'];
-		if (!in_array($extension, $allowedExtensions)) {
-			throw new Exception('Type d\'image non supporté. Les types acceptés sont JPG, JPEG, PNG.');
-		}
-
-		$filename = uniqid() . '.' . $extension;
-		$destination = $uploadDir . $filename;
-
-		if (move_uploaded_file($file['tmp_name'], $destination)) {
-			return '/assets/uploads/' . $subDir . '/' . $filename;
-		}
-
-		throw new Exception('Erreur lors de l\'upload de l\'image.');
+		return new User(
+			id: null,
+			username: $input['username'] ?? '',
+			email: $input['email'] ?? '',
+			password: '',
+			fullName: null,
+			profilePicture: null
+		);
 	}
 }

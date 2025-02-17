@@ -7,7 +7,7 @@ class RateLimit
 	private int $limit;
 	private int $timeWindow;
 
-	public function __construct(int $limit = 5, int $timeWindow = 3600)
+	public function __construct(int $limit = 100, int $timeWindow = 3600)
 	{
 		$this->limit = $limit;
 		$this->timeWindow = $timeWindow;

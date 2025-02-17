@@ -8,24 +8,30 @@ use App\Exception\NotFoundException;
 use App\Exception\UnauthorizedException;
 use App\Repository\BookRepository;
 use App\Service\RateLimit;
+use App\Service\ImageUploadService;
+use App\Service\AuthService;
 use Exception;
 
 class BookController extends AbstractController
 {
 	private BookRepository $bookRepository;
 	private RateLimit $rateLimit;
+	private ImageUploadService $imageService;
 
 	public function __construct()
 	{
 		parent::__construct();
 		$this->bookRepository = new BookRepository();
 		$this->rateLimit = new RateLimit();
+		$this->imageService = new ImageUploadService(ROOT_DIR);
 	}
 
 	public function index()
 	{
 		$search = trim($_GET['search'] ?? '');
-		$page = isset($_GET['page']) && filter_var($_GET['page'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ? (int)$_GET['page'] : 1;
+		$page = isset($_GET['page']) && filter_var($_GET['page'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]])
+			? (int)$_GET['page']
+			: 1;
 		$limit = 12;
 		$offset = ($page - 1) * $limit;
 
@@ -50,9 +56,6 @@ class BookController extends AbstractController
 		$this->view('book/index', $data);
 	}
 
-
-
-
 	public function show($id)
 	{
 		$id = filter_var($id, FILTER_VALIDATE_INT);
@@ -73,23 +76,16 @@ class BookController extends AbstractController
 		$this->view('book/show', $data);
 	}
 
-
-
 	public function create()
 	{
-		if (!isset($_SESSION['user'])) {
-			header('Location: ' . $this->baseUrl . '/login');
-			exit;
-		}
+		AuthService::ensureUserLoggedIn();
 
 		$this->handleBookForm();
 	}
 
 	public function edit($id)
 	{
-		if (!isset($_SESSION['user'])) {
-			throw new UnauthorizedException("Vous devez être connecté pour modifier un livre.");
-		}
+		AuthService::ensureUserLoggedIn();
 
 		$id = filter_var($id, FILTER_VALIDATE_INT);
 		if (!$id) {
@@ -104,16 +100,13 @@ class BookController extends AbstractController
 		$this->handleBookForm($book);
 	}
 
-
 	public function delete($id)
 	{
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			throw new MethodNotAllowedException("Méthode non autorisée.");
 		}
 
-		if (!isset($_SESSION['user'])) {
-			throw new UnauthorizedException("Vous devez être connecté pour supprimer un livre.");
-		}
+		AuthService::ensureUserLoggedIn();
 
 		$id = filter_var($id, FILTER_VALIDATE_INT);
 		if (!$id) {
@@ -126,12 +119,8 @@ class BookController extends AbstractController
 		}
 
 		if ($this->bookRepository->delete((int)$id)) {
-			$imagePath = $book->getImage();
-			if ($imagePath) {
-				$fullImagePath = ROOT_DIR . '/public' . $imagePath;
-				if (file_exists($fullImagePath)) {
-					unlink($fullImagePath);
-				}
+			if ($book->getImage()) {
+				$this->imageService->delete($book->getImage());
 			}
 			header('Location: ' . $this->baseUrl . '/books');
 			exit;
@@ -144,8 +133,7 @@ class BookController extends AbstractController
 
 	private function handleBookForm(?Book $book = null)
 	{
-		$isEdit = $book !== null;
-
+		$isEdit = ($book !== null);
 		$data = [
 			'title' => $isEdit ? 'Modifier le livre' : 'Ajouter un livre',
 			'additionalCss' => ['book.css'],
@@ -159,15 +147,13 @@ class BookController extends AbstractController
 
 			if (empty($errors)) {
 				$imagePath = $book ? $book->getImage() : null;
+
 				if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
 					if ($book && $book->getImage()) {
-						$fullImagePath = ROOT_DIR . '/public' . $book->getImage();
-						if (file_exists($fullImagePath)) {
-							unlink($fullImagePath);
-						}
+						$this->imageService->delete($book->getImage());
 					}
 					try {
-						$imagePath = $this->handleImageUpload($_FILES['image']);
+						$imagePath = $this->imageService->upload($_FILES['image']);
 					} catch (Exception $e) {
 						$errors[] = $e->getMessage();
 					}
@@ -186,7 +172,7 @@ class BookController extends AbstractController
 							header('Location: ' . $this->baseUrl . '/books/show/' . $book->getId());
 							exit;
 						} else {
-							$errors[] = 'Une erreur est survenue lors de la mise à jour du livre.';
+							$errors[] = 'Erreur lors de la mise à jour du livre.';
 						}
 					} else {
 						$newBook = new Book(
@@ -203,15 +189,13 @@ class BookController extends AbstractController
 							header('Location: ' . $this->baseUrl . '/books');
 							exit;
 						} else {
-							$errors[] = 'Une erreur est survenue lors de la création du livre.';
+							$errors[] = 'Erreur lors de la création du livre.';
 						}
 					}
 				}
-
-				$data['errors'] = $errors;
-			} else {
-				$data['errors'] = $errors;
 			}
+
+			$data['errors'] = $errors;
 		}
 
 		$this->view($isEdit ? 'book/edit' : 'book/create', $data);
@@ -245,31 +229,6 @@ class BookController extends AbstractController
 			$errors[] = 'La description ne doit pas dépasser 1000 caractères.';
 		}
 
-
 		return $errors;
-	}
-
-
-	private function handleImageUpload(array $file): string
-	{
-		$uploadDir = ROOT_DIR . '/public/assets/uploads/';
-		if (!is_dir($uploadDir)) {
-			mkdir($uploadDir, 0755, true);
-		}
-
-		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-		$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-		if (!in_array($extension, $allowedExtensions)) {
-			throw new Exception('Type d\'image non supporté. Les types acceptés sont JPG, JPEG, PNG, GIF.');
-		}
-
-		$filename = uniqid() . '.' . $extension;
-		$destination = $uploadDir . $filename;
-
-		if (move_uploaded_file($file['tmp_name'], $destination)) {
-			return '/assets/uploads/' . $filename;
-		}
-
-		throw new Exception('Erreur lors de l\'upload de l\'image.');
 	}
 }

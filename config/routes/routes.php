@@ -48,10 +48,6 @@ return [
 		'path' => '/messages',
 		'controller' => 'App\Controller\MessagingController::main',
 	],
-	'view_conversation' => [
-		'path' => '/messages/view/{conversation_id}',
-		'controller' => 'App\Controller\MessagingController::viewConversation',
-	],
 	'fetch_messages' => [
 		'path' => '/messages/fetch',
 		'controller' => 'App\Controller\MessagingController::fetchMessages',

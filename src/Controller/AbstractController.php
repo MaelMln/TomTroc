@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\MessageRepository;
+use App\Util\Config;
 use Exception;
 use App\Service\ViewRenderer;
 
@@ -12,8 +13,8 @@ abstract class AbstractController
 
 	public function __construct()
 	{
-		$config = require ROOT_DIR . '/config/config.php';
-		$this->baseUrl = $config['base_url'];
+		$config = Config::getInstance();
+		$this->baseUrl = $config->get('base_url');
 	}
 
 	public function getEntity(string $entity)

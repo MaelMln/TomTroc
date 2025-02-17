@@ -53,7 +53,9 @@
 			<a href="<?php echo $baseUrl; ?>/books/create" class="btn-create-book">Ajouter un Livre</a>
 		</div>
 	<?php elseif (isset($_SESSION['user'])): ?>
-		<a href="<?php echo $baseUrl; ?>/conversation/start/<?php echo $user->getId(); ?>" class="btn-message">Écrire un message</a>
+		<a href="<?= $baseUrl ?>/conversation/start/<?= $user->getId() ?>" class="btn-message">
+			Contacter cet utilisateur
+		</a>
 	<?php endif; ?>
 
 	<div class="user-books">

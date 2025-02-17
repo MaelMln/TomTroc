@@ -17,7 +17,7 @@ class User
 		private ?string $profilePicture,
 	)
 	{
-		$this->createdAt = date(DATE_ATOM);
+		$this->createdAt = date("Y-m-d H:i:s");
 	}
 
 	public function getId(): ?int

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Hôte : 172.17.0.1
--- Généré le : mar. 26 nov. 2024 à 18:03
--- Version du serveur : 8.3.0
--- Version de PHP : 8.2.17
+-- Hôte : db
+-- Généré le : lun. 17 fév. 2025 à 15:46
+-- Version du serveur : 10.11.11-MariaDB-ubu2204
+-- Version de PHP : 8.2.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,128 +24,70 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Structure de la table `books`
---
-
-CREATE TABLE `books` (
-  `id` int UNSIGNED NOT NULL,
-  `user_id` int UNSIGNED NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `author` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('disponible','non_disponible') COLLATE utf8mb4_unicode_ci DEFAULT 'disponible',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Structure de la table `messages`
 --
 
 CREATE TABLE `messages` (
-  `id` int UNSIGNED NOT NULL,
-  `sender_id` int UNSIGNED NOT NULL,
-  `receiver_id` int UNSIGNED NOT NULL,
-  `book_id` int UNSIGNED NOT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_read` tinyint(1) DEFAULT '0',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Structure de la table `users`
---
-
-CREATE TABLE `users` (
-  `id` int UNSIGNED NOT NULL,
-  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `full_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `profile_picture` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `id` int(10) UNSIGNED NOT NULL,
+  `conversation_id` int(10) UNSIGNED NOT NULL,
+  `sender_id` int(10) UNSIGNED NOT NULL,
+  `content` text NOT NULL,
+  `sent_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL,
+  `is_read_by_user_one` tinyint(1) NOT NULL DEFAULT 0,
+  `is_read_by_user_two` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Déchargement des données de la table `users`
+-- Déchargement des données de la table `messages`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `profile_picture`, `created_at`, `updated_at`) VALUES
-(1, 'TESTTTT', 'TEST@TEST.TEST', '$2y$10$Ty8rfzoPJA0txMOuMhqtduqFZols4FPyIPXGMKUbJy/e7pIeeSo26', NULL, NULL, '2024-11-26 17:47:19', NULL);
+INSERT INTO `messages` (`id`, `conversation_id`, `sender_id`, `content`, `sent_at`, `created_at`, `updated_at`, `is_read_by_user_one`, `is_read_by_user_two`) VALUES
+(2, 4, 2, 'Salut !', '2025-02-17 14:29:04', '2025-02-17 14:29:04', NULL, 1, 0),
+(3, 4, 2, 'Tu vas bien ?', '2025-02-17 14:29:35', '2025-02-17 14:29:35', NULL, 1, 0),
+(4, 4, 2, 'Test', '2025-02-17 14:30:14', '2025-02-17 14:30:14', NULL, 1, 0),
+(5, 4, 2, 'Test 2', '2025-02-17 14:36:49', '2025-02-17 14:36:49', NULL, 1, 0),
+(6, 4, 2, 'Ca marche ?', '2025-02-17 14:42:35', '2025-02-17 14:42:35', NULL, 1, 0),
+(7, 4, 1, 'Test', '2025-02-17 15:11:40', '2025-02-17 15:11:40', NULL, 0, 1),
+(8, 4, 2, 'Test', '2025-02-17 15:13:57', '2025-02-17 15:13:57', NULL, 1, 0),
+(9, 4, 2, 'Test', '2025-02-17 15:16:14', '2025-02-17 15:16:14', NULL, 1, 0),
+(10, 4, 2, 'Test 3', '2025-02-17 15:42:55', '2025-02-17 15:42:55', NULL, 1, 0),
+(11, 4, 1, 'Test 4', '2025-02-17 15:43:04', '2025-02-17 15:43:04', NULL, 0, 1),
+(12, 4, 2, 'Test 5', '2025-02-17 15:43:40', '2025-02-17 15:43:40', NULL, 1, 0);
 
 --
 -- Index pour les tables déchargées
 --
 
 --
--- Index pour la table `books`
---
-ALTER TABLE `books`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_books_user_id` (`user_id`);
-
---
 -- Index pour la table `messages`
 --
 ALTER TABLE `messages`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_messages_sender_id` (`sender_id`),
-  ADD KEY `idx_messages_receiver_id` (`receiver_id`),
-  ADD KEY `idx_messages_book_id` (`book_id`);
-
---
--- Index pour la table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD KEY `fk_messages_conversation` (`conversation_id`),
+  ADD KEY `fk_messages_sender` (`sender_id`);
 
 --
 -- AUTO_INCREMENT pour les tables déchargées
 --
 
 --
--- AUTO_INCREMENT pour la table `books`
---
-ALTER TABLE `books`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT pour la table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT pour la table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Contraintes pour les tables déchargées
 --
 
 --
--- Contraintes pour la table `books`
---
-ALTER TABLE `books`
-  ADD CONSTRAINT `books_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
 -- Contraintes pour la table `messages`
 --
 ALTER TABLE `messages`
-  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_messages_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_messages_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

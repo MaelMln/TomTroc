@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Util\Config;
 use PDO;
 use PDOException;
 
@@ -12,8 +13,8 @@ class Database
 
 	private function __construct()
 	{
-		$config = require ROOT_DIR . '/config/config.php';
-		$dbConfig = $config['db'];
+		$config = Config::getInstance();
+		$dbConfig = $config->get('db');
 
 		try {
 			$dsn = "mysql:host={$dbConfig['host']};dbname={$dbConfig['dbname']};charset={$dbConfig['charset']}";
