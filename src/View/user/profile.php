@@ -2,17 +2,14 @@
 	<h1><?php echo htmlspecialchars($user->getUsername()); ?></h1>
 	<p>Membre depuis : <?php echo date('d/m/Y', strtotime($user->getCreatedAt())); ?></p>
 	<p>Nombre de livres : <?php echo $bookCount; ?></p>
-
 	<?php if ($user->getProfilePicture()): ?>
 		<img src="<?php echo $baseUrl . $user->getProfilePicture(); ?>"
 			 alt="Photo de profil de <?php echo htmlspecialchars($user->getUsername()); ?>"
 			 class="profile-picture">
 	<?php endif; ?>
-
 	<?php if ($isOwnProfile): ?>
 		<div class="user-info">
 			<h2>Vos informations personnelles</h2>
-
 			<?php if (!empty($errors)): ?>
 				<div class="errors">
 					<ul>
@@ -22,7 +19,6 @@
 					</ul>
 				</div>
 			<?php endif; ?>
-
 			<form method="POST" action="<?php echo $baseUrl; ?>/profile/<?php echo $user->getId(); ?>"
 				  enctype="multipart/form-data" novalidate>
 				<div class="form-group">
@@ -48,19 +44,17 @@
 					<?php endif; ?>
 					<input type="file" id="profile_picture" name="profile_picture" accept="image/*">
 				</div>
-				<button type="submit" class="btn-submit">Mettre à Jour le Profil</button>
+				<button type="submit" class="btn btn-primary">Mettre à Jour le Profil</button>
 			</form>
-			<a href="<?php echo $baseUrl; ?>/books/create" class="btn-create-book">Ajouter un Livre</a>
+			<a href="<?php echo $baseUrl; ?>/books/create" class="btn btn-primary">Ajouter un Livre</a>
 		</div>
 	<?php elseif (isset($_SESSION['user'])): ?>
-		<a href="<?= $baseUrl ?>/conversation/start/<?= $user->getId() ?>" class="btn-message">
+		<a href="<?= $baseUrl ?>/conversation/start/<?= $user->getId() ?>" class="btn btn-outline">
 			Contacter cet utilisateur
 		</a>
 	<?php endif; ?>
-
 	<div class="user-books">
 		<h2>Livres de <?php echo htmlspecialchars($user->getUsername()); ?></h2>
-
 		<?php if (!empty($books)): ?>
 			<table class="books-table">
 				<thead>
@@ -98,12 +92,12 @@
 							</td>
 							<td>
 								<a href="<?php echo $baseUrl; ?>/books/edit/<?php echo $book->getId(); ?>"
-								   class="btn-edit">Modifier</a>
+								   class="btn btn-warning">Modifier</a>
 								<form method="POST"
 									  action="<?php echo $baseUrl; ?>/books/delete/<?php echo $book->getId(); ?>"
 									  style="display:inline-block"
 									  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ?');">
-									<button type="submit" class="btn-delete">Supprimer</button>
+									<button type="submit" class="btn btn-danger">Supprimer</button>
 								</form>
 							</td>
 						<?php endif; ?>

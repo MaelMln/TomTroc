@@ -1,6 +1,5 @@
 <div class="create-book-container">
 	<h1>Ajouter un nouveau livre</h1>
-
 	<?php if (!empty($errors)): ?>
 		<div class="errors">
 			<ul>
@@ -10,7 +9,6 @@
 			</ul>
 		</div>
 	<?php endif; ?>
-
 	<form method="POST" action="<?php echo $baseUrl; ?>/books/create" enctype="multipart/form-data" novalidate>
 		<div class="form-group">
 			<label for="title">Titre</label>
@@ -35,6 +33,6 @@
 				<option value="non_disponible" <?php echo (($_POST['status'] ?? '') === 'non_disponible') ? 'selected' : ''; ?>>Non Disponible</option>
 			</select>
 		</div>
-		<button type="submit" class="btn-submit">Ajouter le Livre</button>
+		<button type="submit" class="btn btn-primary">Ajouter le Livre</button>
 	</form>
 </div>

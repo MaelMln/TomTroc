@@ -1,7 +1,6 @@
 <div class="register-container">
 	<div class="register-form">
 		<h1>Inscription</h1>
-
 		<?php if (isset($errors) && !empty($errors)): ?>
 			<div class="errors">
 				<ul>
@@ -11,7 +10,6 @@
 				</ul>
 			</div>
 		<?php endif; ?>
-
 		<form method="POST" action="/register" novalidate>
 			<div class="form-group">
 				<label for="username">Pseudo</label>
@@ -25,7 +23,7 @@
 				<label for="password">Mot de passe</label>
 				<input type="password" id="password" name="password" required>
 			</div>
-			<button type="submit" class="btn-submit">S'inscrire</button>
+			<button type="submit" class="btn btn-primary">S'inscrire</button>
 		</form>
 		<p>Déjà inscrit ? <a href="/login">Connectez-vous</a></p>
 	</div>

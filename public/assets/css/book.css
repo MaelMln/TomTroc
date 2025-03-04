@@ -1,22 +1,18 @@
 .book-list {
 	padding: 20px;
 }
-
 .book-image {
 	max-width: 200px;
 	max-height: 200px;
 }
-
 .search-form {
 	margin-bottom: 20px;
 }
-
 .books {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 20px;
 }
-
 .book-item {
 	border: 1px solid #ddd;
 	padding: 15px;
@@ -26,69 +22,18 @@
 	background-color: #fff;
 	transition: box-shadow 0.3s;
 }
-
 .book-item:hover {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .book-item img {
 	max-width: 100%;
 	height: auto;
 	border-radius: 4px;
 }
-
-.btn-view {
-	display: inline-block;
-	margin-top: 10px;
-	padding: 8px 12px;
-	background-color: #00AC66;
-	color: #fff;
-	text-decoration: none;
-	border-radius: 4px;
-}
-
-.btn-view:hover {
-	background-color: #006D41;
-}
-
-/* Bouton Modifier */
-.btn-edit {
-	display: inline-block;
-	margin-top: 10px;
-	padding: 8px 12px;
-	background-color: #FFC107;
-	color: #fff;
-	text-decoration: none;
-	border-radius: 4px;
-	margin-right: 5px;
-}
-
-.btn-edit:hover {
-	background-color: #FF9800;
-}
-
-/* Bouton Supprimer */
-.btn-delete {
-	display: inline-block;
-	margin-top: 10px;
-	padding: 8px 12px;
-	background-color: #DC3545;
-	color: #fff;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-}
-
-.btn-delete:hover {
-	background-color: #C82333;
-}
-
 .form-group img {
 	max-width: 100px;
 	max-height: 100px;
 }
-
-/* Pagination */
 .pagination {
 	display: flex;
 	justify-content: center;
@@ -96,7 +41,6 @@
 	margin-top: 20px;
 	gap: 10px;
 }
-
 .pagination a {
 	padding: 8px 12px;
 	background-color: #00AC66;
@@ -104,13 +48,10 @@
 	text-decoration: none;
 	border-radius: 4px;
 }
-
 .pagination a:hover {
 	background-color: #006D41;
 }
-
 .pagination span {
 	font-size: 16px;
 	color: #333;
 }
-

@@ -17,10 +17,8 @@
 		}
 		?>
 	</p>
-
 	<?php if (isset($exception) && $config['env'] === 'development'): ?>
 		<pre><?php echo htmlspecialchars($exception->getMessage() . "\n" . $exception->getTraceAsString()); ?></pre>
 	<?php endif; ?>
-
 	<p><a href="<?php echo htmlspecialchars($baseUrl); ?>">Retour à l'accueil</a></p>
 </div>

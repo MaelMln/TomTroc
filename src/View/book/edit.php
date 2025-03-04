@@ -1,6 +1,5 @@
 <div>
 	<h1>Modifier le livre</h1>
-
 	<?php if (!empty($errors)): ?>
 		<div class="errors">
 			<ul>
@@ -10,7 +9,6 @@
 			</ul>
 		</div>
 	<?php endif; ?>
-
 	<form method="POST" action="<?php echo $baseUrl; ?>/books/edit/<?php echo $book->getId(); ?>" enctype="multipart/form-data" novalidate>
 		<div class="form-group">
 			<label for="title">Titre</label>
@@ -38,6 +36,6 @@
 				<option value="non_disponible" <?php echo ((($_POST['status'] ?? $book->getStatus()) === 'non_disponible') ? 'selected' : ''); ?>>Non Disponible</option>
 			</select>
 		</div>
-		<button type="submit" class="btn-submit">Mettre à Jour le Livre</button>
+		<button type="submit" class="btn btn-primary">Mettre à Jour le Livre</button>
 	</form>
 </div>

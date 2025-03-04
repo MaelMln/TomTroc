@@ -23,7 +23,6 @@
 			</div>
 		<?php endif; ?>
 	</div>
-
 	<div class="chat-area">
 		<?php if ($activeConversation): ?>
 			<?php
@@ -38,32 +37,29 @@
 						<div class="message <?= $classSent ?>" data-msg-id="<?= $msg->getId() ?>">
 							<p><?= htmlspecialchars($msg->getContent()) ?></p>
 							<span>
-								<?php if ($msg->getSenderId() === $userId): ?>
-									<?php if ($userId === $userOneId && $msg->isReadByUserTwo()): ?>
-										<strong>(Lu)</strong>
-									<?php elseif ($userId === $userTwoId && $msg->isReadByUserOne()): ?>
-										<strong>(Lu)</strong>
-									<?php endif; ?>
-								<?php endif; ?>
+                <?php if ($msg->getSenderId() === $userId): ?>
+					<?php if ($userId === $userOneId && $msg->isReadByUserTwo()): ?>
+						<strong>(Lu)</strong>
+					<?php elseif ($userId === $userTwoId && $msg->isReadByUserOne()): ?>
+						<strong>(Lu)</strong>
+					<?php endif; ?>
+				<?php endif; ?>
 								<?= htmlspecialchars($msg->getSentAt()) ?>
-							</span>
+              </span>
 						</div>
 					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
-
 			<div class="chat-form">
 				<textarea id="messageInput" placeholder="Écrivez votre message..."></textarea>
-				<button id="sendBtn" class="btn-submit">Envoyer</button>
+				<button id="sendBtn" class="btn btn-primary">Envoyer</button>
 			</div>
 		<?php else: ?>
 			<p>Sélectionnez une conversation à gauche pour chatter.</p>
 		<?php endif; ?>
 	</div>
 </div>
-
 <script src="<?= $baseUrl ?>/assets/js/messagingMain.js"></script>
-
 <?php if ($activeConversation): ?>
 	<script>
 		initMessaging({

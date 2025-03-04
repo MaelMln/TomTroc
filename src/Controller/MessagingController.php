@@ -56,6 +56,7 @@ class MessagingController extends AbstractController
 		$data = [
 			'title' => 'Messagerie - TomTroc',
 			'additionalCss' => ['messaging.css'],
+			'additionnalJs' => ['messagingMain.js'],
 			'conversations' => $conversations,
 			'userId' => $userId,
 			'currentPage' => $page,
@@ -91,6 +92,7 @@ class MessagingController extends AbstractController
 		$data = [
 			'title' => 'Conversation',
 			'additionalCss' => ['messaging.css'],
+			'additionnalJs' => ['messagingView.js'],
 			'conversation' => $conversation,
 			'messages' => $messages,
 			'errors' => [],
